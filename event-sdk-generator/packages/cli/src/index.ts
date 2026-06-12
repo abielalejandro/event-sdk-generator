@@ -6,6 +6,7 @@ import { buildCatalog, loadEventDefinitions, readJson, validateDefinitions, vali
 import { generateTypeScriptSdk } from "@eventgen/generator-typescript";
 import { generateJavaSdk } from "@eventgen/generator-java";
 import { generatePythonSdk } from "@eventgen/generator-python";
+import { generateGoSdk } from "@eventgen/generator-go";
 
 type Config = {
   events?: string;
@@ -15,6 +16,7 @@ type Config = {
     typescript?: { out?: string };
     java?: { out?: string; package?: string };
     python?: { out?: string; packageName?: string };
+    go?: { out?: string; modulePath?: string };
   };
 };
 
@@ -26,6 +28,7 @@ const DEFAULTS: Required<Omit<Config, "generate">> & { generate: Required<Config
     typescript: { out: "./generated/typescript" },
     java: { out: "./generated/java", package: "com.company.events" },
     python: { out: "./generated/python", packageName: "company_events" },
+    go: { out: "./generated/go", modulePath: "github.com/company/generated-events-sdk" },
   },
 };
 
@@ -83,6 +86,7 @@ program.command("generate")
   .option("--out <dir>", "Output directory for generated SDK")
   .option("--java-package <pkg>", "Java package name")
   .option("--python-package <pkg>", "Python package name")
+  .option("--go-module <path>", "Go module path")
   .action((opts) => {
     const cfg = loadConfig();
     const eventsDir = resolve(opts.events, cfg.events, DEFAULTS.events);
@@ -101,6 +105,10 @@ program.command("generate")
       const outDir = resolve(opts.out, cfg.generate?.python?.out, DEFAULTS.generate.python.out!);
       const packageName = opts.packageName ?? cfg.generate?.python?.packageName ?? DEFAULTS.generate.python.packageName;
       generatePythonSdk({ events, bindings, outDir, packageName });
+    } else if (opts.target === "go") {
+      const outDir = resolve(opts.out, cfg.generate?.go?.out, DEFAULTS.generate.go.out!);
+      const modulePath = opts.modulePath ?? cfg.generate?.go?.modulePath ?? DEFAULTS.generate.go.modulePath;
+      generateGoSdk({ events, bindings, outDir, modulePath });
     } else {
       throw new Error(`Unsupported target: ${opts.target}`);
     }
