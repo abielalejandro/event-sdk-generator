@@ -12,6 +12,7 @@
   "dependencies": {
     "@eventgen/core": "workspace:*",
     "@eventgen/generator-java": "workspace:*",
+    "@eventgen/generator-python": "workspace:^",
     "@eventgen/generator-typescript": "workspace:*",
     "commander": "^12.1.0",
     "tsx": "^4.19.2"

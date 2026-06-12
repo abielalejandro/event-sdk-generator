@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { buildCatalog, loadEventDefinitions, readJson, validateDefinitions, validateBindings, type BindingFile } from "@eventgen/core";
 import { generateTypeScriptSdk } from "@eventgen/generator-typescript";
 import { generateJavaSdk } from "@eventgen/generator-java";
+import { generatePythonSdk } from "@eventgen/generator-python";
 
 type Config = {
   events?: string;
@@ -13,6 +14,7 @@ type Config = {
   generate?: {
     typescript?: { out?: string };
     java?: { out?: string; package?: string };
+    python?: { out?: string; packageName?: string };
   };
 };
 
@@ -23,6 +25,7 @@ const DEFAULTS: Required<Omit<Config, "generate">> & { generate: Required<Config
   generate: {
     typescript: { out: "./generated/typescript" },
     java: { out: "./generated/java", package: "com.company.events" },
+    python: { out: "./generated/python", packageName: "company_events" },
   },
 };
 
@@ -79,6 +82,7 @@ program.command("generate")
   .option("--bindings <file>", "Binding file path")
   .option("--out <dir>", "Output directory for generated SDK")
   .option("--java-package <pkg>", "Java package name")
+  .option("--python-package <pkg>", "Python package name")
   .action((opts) => {
     const cfg = loadConfig();
     const eventsDir = resolve(opts.events, cfg.events, DEFAULTS.events);
@@ -93,6 +97,10 @@ program.command("generate")
       const outDir = resolve(opts.out, cfg.generate?.java?.out, DEFAULTS.generate.java.out!);
       const javaPackage = resolve(opts.javaPackage, cfg.generate?.java?.package, DEFAULTS.generate.java.package!);
       generateJavaSdk({ events, bindings, outDir, javaPackage });
+    } else if (opts.target === "python") {
+      const outDir = resolve(opts.out, cfg.generate?.python?.out, DEFAULTS.generate.python.out!);
+      const packageName = opts.packageName ?? cfg.generate?.python?.packageName ?? DEFAULTS.generate.python.packageName;
+      generatePythonSdk({ events, bindings, outDir, packageName });
     } else {
       throw new Error(`Unsupported target: ${opts.target}`);
     }
