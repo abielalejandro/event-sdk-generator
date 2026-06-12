@@ -4,7 +4,17 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": { "build": "tsc -p tsconfig.json" },
-  "dependencies": { "@eventgen/core": "workspace:*" },
-  "devDependencies": { "@types/node": "^20.16.11" }
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@eventgen/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "@vitest/coverage-v8": "^4.1.8",
+    "vitest": "^4.1.8"
+  }
 }
