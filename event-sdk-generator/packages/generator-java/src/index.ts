@@ -75,6 +75,7 @@ ${builderSetters}
 
 import com.eventgen.runtime.EventEnvelope;
 import com.eventgen.runtime.EventMetadata;
+import com.eventgen.runtime.FifoOptions;
 import com.eventgen.runtime.PublishResult;
 import com.eventgen.runtime.TransportAdapter;
 import java.time.Instant;
@@ -84,10 +85,13 @@ public class ${publisherName} {
     private final TransportAdapter transport;
     public ${publisherName}(TransportAdapter transport) { this.transport = transport; }
     public PublishResult publish(${className} payload) {
-        return publish(payload, UUID.randomUUID().toString());
+        return publish(payload, UUID.randomUUID().toString(), null);
     }
     public PublishResult publish(${className} payload, String traceId) {
-        EventMetadata metadata = new EventMetadata(Instant.now().toString(), traceId);
+        return publish(payload, traceId, null);
+    }
+    public PublishResult publish(${className} payload, String traceId, FifoOptions fifo) {
+        EventMetadata metadata = new EventMetadata(Instant.now().toString(), traceId, fifo);
         return transport.publish(new EventEnvelope("${event.id}", "${event.version}", payload, metadata));
     }
 }

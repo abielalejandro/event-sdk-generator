@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="8" failures="0" errors="0" time="0.012167888">
+    <testsuite name="src/__tests__/generator.test.ts" timestamp="2026-06-12T03:32:47.662Z" hostname="main" tests="4" failures="0" errors="0" skipped="0" time="0.004511043">
+        <testcase classname="src/__tests__/generator.test.ts" name="Java SDK generator &gt; generates pom.xml with runtime-java dependency" time="0.001052113">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Java SDK generator &gt; generates Payload class with builder" time="0.000238694">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Java SDK generator &gt; generates Publisher with runtime imports and publish overloads" time="0.00020149">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Java SDK generator &gt; generates EventClient with domain method" time="0.000129757">
+        </testcase>
+    </testsuite>
+    <testsuite name="dist/__tests__/generator.test.js" timestamp="2026-06-12T03:32:47.663Z" hostname="main" tests="4" failures="0" errors="0" skipped="0" time="0.007656845">
+        <testcase classname="dist/__tests__/generator.test.js" name="Java SDK generator &gt; generates pom.xml with runtime-java dependency" time="0.001803338">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Java SDK generator &gt; generates Payload class with builder" time="0.00049702">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Java SDK generator &gt; generates Publisher with runtime imports and publish overloads" time="0.000423355">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Java SDK generator &gt; generates EventClient with domain method" time="0.00027016">
+        </testcase>
+    </testsuite>
+</testsuites>

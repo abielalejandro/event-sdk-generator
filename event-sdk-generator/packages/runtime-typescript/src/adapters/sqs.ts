@@ -17,6 +17,7 @@ export class SqsTransportAdapter implements TransportAdapter {
   }
 
   async publish(envelope: EventEnvelope): Promise<PublishResult> {
+    const fifo = envelope.metadata.fifo;
     const result = await this.client.send(
       new SendMessageCommand({
         QueueUrl: this.queueUrl,
@@ -25,6 +26,10 @@ export class SqsTransportAdapter implements TransportAdapter {
           eventId: { DataType: "String", StringValue: envelope.eventId },
           version: { DataType: "String", StringValue: envelope.version },
         },
+        ...(fifo && {
+          MessageGroupId: fifo.messageGroupId,
+          ...(fifo.deduplicationId && { MessageDeduplicationId: fifo.deduplicationId }),
+        }),
       })
     );
     return { messageId: result.MessageId };

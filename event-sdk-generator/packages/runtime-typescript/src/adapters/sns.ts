@@ -17,6 +17,7 @@ export class SnsTransportAdapter implements TransportAdapter {
   }
 
   async publish(envelope: EventEnvelope): Promise<PublishResult> {
+    const fifo = envelope.metadata.fifo;
     const result = await this.client.send(
       new PublishCommand({
         TopicArn: this.topicArn,
@@ -25,6 +26,10 @@ export class SnsTransportAdapter implements TransportAdapter {
           eventId: { DataType: "String", StringValue: envelope.eventId },
           version: { DataType: "String", StringValue: envelope.version },
         },
+        ...(fifo && {
+          MessageGroupId: fifo.messageGroupId,
+          ...(fifo.deduplicationId && { MessageDeduplicationId: fifo.deduplicationId }),
+        }),
       })
     );
     return { messageId: result.MessageId };

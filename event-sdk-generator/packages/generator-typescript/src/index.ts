@@ -10,7 +10,7 @@ export function generateTypeScriptSdk(input: { events: EventDefinition[]; bindin
   );
   fs.writeFileSync(
     path.join(input.outDir, "src", "runtime.ts"),
-    `export type { TransportAdapter, EventEnvelope, PublishResult } from "@eventgen/runtime-typescript";\nexport { buildEnvelope } from "@eventgen/runtime-typescript";\n`
+    `export type { TransportAdapter, EventEnvelope, PublishResult, FifoOptions, PublishOptions } from "@eventgen/runtime-typescript";\nexport { buildEnvelope } from "@eventgen/runtime-typescript";\n`
   );
 
   // Group events by domain to build the nested client structure
@@ -29,7 +29,7 @@ export function generateTypeScriptSdk(input: { events: EventDefinition[]; bindin
 
     fs.writeFileSync(
       file,
-      `import type { TransportAdapter, PublishResult } from "../runtime";
+      `import type { TransportAdapter, PublishResult, PublishOptions } from "../runtime";
 import { buildEnvelope } from "../runtime";
 
 export type ${typeName} = {
@@ -38,8 +38,8 @@ ${props}
 
 export function ${factoryFn}(transport: TransportAdapter) {
   return {
-    publish(payload: ${typeName}, traceId?: string): Promise<PublishResult> {
-      return transport.publish(buildEnvelope("${event.id}", "${event.version}", payload, traceId));
+    publish(payload: ${typeName}, opts?: string | PublishOptions): Promise<PublishResult> {
+      return transport.publish(buildEnvelope("${event.id}", "${event.version}", payload, opts));
     }
   };
 }

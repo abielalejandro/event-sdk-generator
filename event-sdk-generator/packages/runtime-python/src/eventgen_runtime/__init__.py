@@ -2,7 +2,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from eventgen_runtime.types import EventEnvelope, EventMetadata, PublishResult, TransportAdapter
+from eventgen_runtime.types import EventEnvelope, EventMetadata, PublishResult, TransportAdapter, FifoOptions
 from eventgen_runtime.adapters.memory import InMemoryTransportAdapter
 from eventgen_runtime.middleware.retry import with_retry
 from eventgen_runtime.middleware.logging import with_logging
@@ -10,6 +10,7 @@ from eventgen_runtime.middleware.logging import with_logging
 __all__ = [
     "EventEnvelope",
     "EventMetadata",
+    "FifoOptions",
     "PublishResult",
     "TransportAdapter",
     "InMemoryTransportAdapter",
@@ -32,6 +33,7 @@ def build_envelope(
     version: str,
     payload: object,
     trace_id: str | None = None,
+    fifo: FifoOptions | None = None,
 ) -> EventEnvelope:
     return EventEnvelope(
         event_id=event_id,
@@ -40,6 +42,7 @@ def build_envelope(
         metadata=EventMetadata(
             created_at=datetime.now(timezone.utc).isoformat(),
             trace_id=trace_id or str(uuid.uuid4()),
+            fifo=fifo,
         ),
     )
 

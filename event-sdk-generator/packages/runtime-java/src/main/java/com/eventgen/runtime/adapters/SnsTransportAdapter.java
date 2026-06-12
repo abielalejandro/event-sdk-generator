@@ -31,14 +31,19 @@ public class SnsTransportAdapter implements TransportAdapter {
     public PublishResult publish(EventEnvelope envelope) {
         try {
             String body = mapper.writeValueAsString(envelope);
-            PublishResponse response = client.publish(PublishRequest.builder()
+            var builder = PublishRequest.builder()
                 .topicArn(topicArn)
                 .message(body)
                 .messageAttributes(Map.of(
                     "eventId", attr(envelope.eventId()),
                     "version", attr(envelope.version())
-                ))
-                .build());
+                ));
+            if (envelope.metadata().fifo() != null) {
+                builder.messageGroupId(envelope.metadata().fifo().messageGroupId());
+                if (envelope.metadata().fifo().deduplicationId() != null)
+                    builder.messageDeduplicationId(envelope.metadata().fifo().deduplicationId());
+            }
+            PublishResponse response = client.publish(builder.build());
             return new PublishResult(response.messageId());
         } catch (Exception e) {
             throw new RuntimeException("SNS publish failed for event: " + envelope.eventId(), e);

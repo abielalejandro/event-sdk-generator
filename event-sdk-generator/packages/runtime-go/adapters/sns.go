@@ -34,14 +34,21 @@ func (a *SnsTransportAdapter) Publish(ctx context.Context, envelope runtime.Even
 	if err != nil {
 		return nil, fmt.Errorf("sns adapter: marshal envelope: %w", err)
 	}
-	out, err := a.client.Publish(ctx, &sns.PublishInput{
+	input := &sns.PublishInput{
 		TopicArn: aws.String(a.topicArn),
 		Message:  aws.String(string(body)),
 		MessageAttributes: map[string]types.MessageAttributeValue{
 			"eventId": {DataType: aws.String("String"), StringValue: aws.String(envelope.EventID)},
 			"version": {DataType: aws.String("String"), StringValue: aws.String(envelope.Version)},
 		},
-	})
+	}
+	if f := envelope.Metadata.Fifo; f != nil {
+		input.MessageGroupId = aws.String(f.MessageGroupId)
+		if f.DeduplicationId != "" {
+			input.MessageDeduplicationId = aws.String(f.DeduplicationId)
+		}
+	}
+	out, err := a.client.Publish(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("sns adapter: publish %s: %w", envelope.EventID, err)
 	}

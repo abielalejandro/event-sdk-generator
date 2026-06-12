@@ -34,14 +34,21 @@ func (a *SqsTransportAdapter) Publish(ctx context.Context, envelope runtime.Even
 	if err != nil {
 		return nil, fmt.Errorf("sqs adapter: marshal envelope: %w", err)
 	}
-	out, err := a.client.SendMessage(ctx, &sqs.SendMessageInput{
+	input := &sqs.SendMessageInput{
 		QueueUrl:    aws.String(a.queueURL),
 		MessageBody: aws.String(string(body)),
 		MessageAttributes: map[string]types.MessageAttributeValue{
 			"eventId": {DataType: aws.String("String"), StringValue: aws.String(envelope.EventID)},
 			"version": {DataType: aws.String("String"), StringValue: aws.String(envelope.Version)},
 		},
-	})
+	}
+	if f := envelope.Metadata.Fifo; f != nil {
+		input.MessageGroupId = aws.String(f.MessageGroupId)
+		if f.DeduplicationId != "" {
+			input.MessageDeduplicationId = aws.String(f.DeduplicationId)
+		}
+	}
+	out, err := a.client.SendMessage(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("sqs adapter: send %s: %w", envelope.EventID, err)
 	}

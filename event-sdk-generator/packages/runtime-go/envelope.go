@@ -22,6 +22,7 @@ func BuildEnvelope(eventID, version string, payload any, opts ...PublishOption) 
 		Metadata: EventMetadata{
 			CreatedAt: time.Now().UTC().Format(time.RFC3339Nano),
 			TraceID:   o.TraceID,
+			Fifo:      o.Fifo,
 		},
 	}
 }

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="26" failures="0" errors="0" time="0.092251902">
+    <testsuite name="dist/__tests__/catalog.test.js" timestamp="2026-06-12T03:32:46.873Z" hostname="main" tests="5" failures="0" errors="0" skipped="0" time="0.002893526">
+        <testcase classname="dist/__tests__/catalog.test.js" name="buildCatalog &gt; includes generatedAt and environment" time="0.001423599">
+        </testcase>
+        <testcase classname="dist/__tests__/catalog.test.js" name="buildCatalog &gt; attaches destination from matching binding" time="0.000150041">
+        </testcase>
+        <testcase classname="dist/__tests__/catalog.test.js" name="buildCatalog &gt; leaves destination undefined when no binding matches" time="0.000130078">
+        </testcase>
+        <testcase classname="dist/__tests__/catalog.test.js" name="buildCatalog &gt; generates correct typescript usage string" time="0.000114975">
+        </testcase>
+        <testcase classname="dist/__tests__/catalog.test.js" name="buildCatalog &gt; generates correct java usage string" time="0.000101807">
+        </testcase>
+    </testsuite>
+    <testsuite name="dist/__tests__/validate.test.js" timestamp="2026-06-12T03:32:46.875Z" hostname="main" tests="8" failures="0" errors="0" skipped="0" time="0.042359914">
+        <testcase classname="dist/__tests__/validate.test.js" name="validateDefinitions &gt; returns empty array for valid event" time="0.020274888">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateDefinitions &gt; reports missing required fields" time="0.00880109">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateDefinitions &gt; reports invalid payloadSchema" time="0.005549726">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateDefinitions &gt; accepts multiple valid events" time="0.005775494">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateBindings &gt; returns empty array when all bindings match definitions" time="0.000239723">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateBindings &gt; reports binding referencing unknown event" time="0.000227223">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateBindings &gt; reports binding missing provider" time="0.000186277">
+        </testcase>
+        <testcase classname="dist/__tests__/validate.test.js" name="validateBindings &gt; reports version mismatch" time="0.000177143">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/catalog.test.ts" timestamp="2026-06-12T03:32:46.876Z" hostname="main" tests="5" failures="0" errors="0" skipped="0" time="0.002880145">
+        <testcase classname="src/__tests__/catalog.test.ts" name="buildCatalog &gt; includes generatedAt and environment" time="0.001402549">
+        </testcase>
+        <testcase classname="src/__tests__/catalog.test.ts" name="buildCatalog &gt; attaches destination from matching binding" time="0.000148501">
+        </testcase>
+        <testcase classname="src/__tests__/catalog.test.ts" name="buildCatalog &gt; leaves destination undefined when no binding matches" time="0.000136684">
+        </testcase>
+        <testcase classname="src/__tests__/catalog.test.ts" name="buildCatalog &gt; generates correct typescript usage string" time="0.000120498">
+        </testcase>
+        <testcase classname="src/__tests__/catalog.test.ts" name="buildCatalog &gt; generates correct java usage string" time="0.000107853">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/validate.test.ts" timestamp="2026-06-12T03:32:46.876Z" hostname="main" tests="8" failures="0" errors="0" skipped="0" time="0.044118317">
+        <testcase classname="src/__tests__/validate.test.ts" name="validateDefinitions &gt; returns empty array for valid event" time="0.020907331">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateDefinitions &gt; reports missing required fields" time="0.009004397">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateDefinitions &gt; reports invalid payloadSchema" time="0.005731812">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateDefinitions &gt; accepts multiple valid events" time="0.006333032">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateBindings &gt; returns empty array when all bindings match definitions" time="0.000298838">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateBindings &gt; reports binding referencing unknown event" time="0.000303344">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateBindings &gt; reports binding missing provider" time="0.000202358">
+        </testcase>
+        <testcase classname="src/__tests__/validate.test.ts" name="validateBindings &gt; reports version mismatch" time="0.000135942">
+        </testcase>
+    </testsuite>
+</testsuites>

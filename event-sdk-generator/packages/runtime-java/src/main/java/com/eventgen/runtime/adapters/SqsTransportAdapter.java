@@ -31,14 +31,19 @@ public class SqsTransportAdapter implements TransportAdapter {
     public PublishResult publish(EventEnvelope envelope) {
         try {
             String body = mapper.writeValueAsString(envelope);
-            SendMessageResponse response = client.sendMessage(SendMessageRequest.builder()
+            var builder = SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageBody(body)
                 .messageAttributes(Map.of(
                     "eventId", attr(envelope.eventId()),
                     "version", attr(envelope.version())
-                ))
-                .build());
+                ));
+            if (envelope.metadata().fifo() != null) {
+                builder.messageGroupId(envelope.metadata().fifo().messageGroupId());
+                if (envelope.metadata().fifo().deduplicationId() != null)
+                    builder.messageDeduplicationId(envelope.metadata().fifo().deduplicationId());
+            }
+            SendMessageResponse response = client.sendMessage(builder.build());
             return new PublishResult(response.messageId());
         } catch (Exception e) {
             throw new RuntimeException("SQS publish failed for event: " + envelope.eventId(), e);

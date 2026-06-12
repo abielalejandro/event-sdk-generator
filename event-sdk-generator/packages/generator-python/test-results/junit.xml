@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="10" failures="0" errors="0" time="0.008775697">
+    <testsuite name="dist/__tests__/generator.test.js" timestamp="2026-06-12T03:32:47.671Z" hostname="main" tests="5" failures="0" errors="0" skipped="0" time="0.004804204">
+        <testcase classname="dist/__tests__/generator.test.js" name="Python SDK generator &gt; generates pyproject.toml with runtime dependency" time="0.000860196">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Python SDK generator &gt; generates dataclass payload with Decimal for number fields" time="0.000232486">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Python SDK generator &gt; generates async publish method using build_envelope" time="0.000155471">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Python SDK generator &gt; generates __init__.py with create_client factory" time="0.000142617">
+        </testcase>
+        <testcase classname="dist/__tests__/generator.test.js" name="Python SDK generator &gt; creates __init__.py in events subpackage" time="0.000153922">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/generator.test.ts" timestamp="2026-06-12T03:32:47.672Z" hostname="main" tests="5" failures="0" errors="0" skipped="0" time="0.003971493">
+        <testcase classname="src/__tests__/generator.test.ts" name="Python SDK generator &gt; generates pyproject.toml with runtime dependency" time="0.000901429">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Python SDK generator &gt; generates dataclass payload with Decimal for number fields" time="0.000219257">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Python SDK generator &gt; generates async publish method using build_envelope" time="0.000155902">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Python SDK generator &gt; generates __init__.py with create_client factory" time="0.000182723">
+        </testcase>
+        <testcase classname="src/__tests__/generator.test.ts" name="Python SDK generator &gt; creates __init__.py in events subpackage" time="0.000168111">
+        </testcase>
+    </testsuite>
+</testsuites>

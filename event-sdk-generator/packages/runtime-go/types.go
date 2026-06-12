@@ -2,10 +2,25 @@ package runtime
 
 import "context"
 
+// FifoOptions enables ordered delivery in SQS FIFO queues and SNS FIFO topics.
+type FifoOptions struct {
+	// MessageGroupId groups messages for ordered delivery within the group.
+	MessageGroupId string `json:"messageGroupId"`
+	// DeduplicationId is the unique token for deduplication (5-minute window).
+	// If empty, content-based deduplication must be enabled on the queue/topic.
+	DeduplicationId string `json:"deduplicationId,omitempty"`
+}
+
+// WithFifo sets FIFO options on the publish call.
+func WithFifo(opts FifoOptions) PublishOption {
+	return func(o *PublishOptions) { o.Fifo = &opts }
+}
+
 // EventMetadata carries observability fields attached to every published event.
 type EventMetadata struct {
-	CreatedAt string `json:"createdAt"`
-	TraceID   string `json:"traceId"`
+	CreatedAt string       `json:"createdAt"`
+	TraceID   string       `json:"traceId"`
+	Fifo      *FifoOptions `json:"fifo,omitempty"`
 }
 
 // EventEnvelope wraps any event payload with its identity and metadata.
@@ -29,6 +44,7 @@ type TransportAdapter interface {
 // PublishOptions holds optional publish-time parameters.
 type PublishOptions struct {
 	TraceID string
+	Fifo    *FifoOptions
 }
 
 // PublishOption is a functional option for Publish calls.

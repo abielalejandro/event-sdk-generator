@@ -12,6 +12,12 @@ class SqsTransportAdapter:
     async def publish(self, envelope: EventEnvelope) -> PublishResult:
         import aioboto3  # type: ignore[import]
         session = aioboto3.Session()
+        fifo = envelope.metadata.fifo
+        extra: dict = {}
+        if fifo:
+            extra["MessageGroupId"] = fifo.message_group_id
+            if fifo.deduplication_id:
+                extra["MessageDeduplicationId"] = fifo.deduplication_id
         async with session.client("sqs", region_name=self._region) as client:
             response = await client.send_message(
                 QueueUrl=self._queue_url,
@@ -20,5 +26,6 @@ class SqsTransportAdapter:
                     "eventId": {"DataType": "String", "StringValue": envelope.event_id},
                     "version": {"DataType": "String", "StringValue": envelope.version},
                 },
+                **extra,
             )
         return PublishResult(message_id=response["MessageId"])
