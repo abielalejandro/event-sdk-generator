@@ -129,3 +129,49 @@ KafkaTransportAdapter(
 ```bash
 pip install "eventgen-runtime-python[kafka]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+
+    "github.com/IBM/sarama"
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+)
+
+ctx := context.Background()
+
+kafka, err := adapters.NewKafkaTransportAdapter(
+    []string{"kafka-broker:9092"},
+    "payments-topic",
+    nil, // nil = config por defecto con Return.Successes y WaitForAll
+)
+if err != nil {
+    log.Fatal(err)
+}
+defer kafka.Close()
+
+transport := middleware.WithLogging(kafka, nil)
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
+fmt.Println(result.MessageID) // "0-42" → partition 0, offset 42
+```
+
+### Constructor
+
+```go
+NewKafkaTransportAdapter(brokers []string, topic string, cfg *sarama.Config) (*KafkaTransportAdapter, error)
+NewKafkaTransportAdapterWithProducer(producer sarama.SyncProducer, topic string) *KafkaTransportAdapter
+```
+
+> `Close()` hace flush y cierra el producer. Siempre llamarlo al apagar el proceso.
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

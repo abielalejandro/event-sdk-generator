@@ -135,3 +135,47 @@ RabbitMQTransportAdapter(
 ```bash
 pip install "eventgen-runtime-python[rabbitmq]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+)
+
+ctx := context.Background()
+
+rabbit, err := adapters.NewRabbitMQTransportAdapter(
+    "amqp://user:password@rabbitmq-host:5672",
+    "events",
+    "payment.created", // routing key; "" = usa eventId
+)
+if err != nil {
+    log.Fatal(err)
+}
+defer rabbit.Close()
+
+transport := middleware.WithRetry(rabbit, middleware.RetryOptions{MaxAttempts: 3})
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
+```
+
+### Constructor
+
+```go
+NewRabbitMQTransportAdapter(url, exchange, routingKey string) (*RabbitMQTransportAdapter, error)
+NewRabbitMQTransportAdapterWithChannel(conn *amqp.Connection, ch *amqp.Channel, exchange, routingKey string) *RabbitMQTransportAdapter
+```
+
+> `Close()` cierra el channel y la conexión. El exchange debe existir previamente.
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

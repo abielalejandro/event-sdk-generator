@@ -119,3 +119,41 @@ SqsTransportAdapter(queue_url: str, region: str | None = None)
 ```bash
 pip install "eventgen-runtime-python[aws]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+    "os"
+
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+)
+
+ctx := context.Background()
+
+sqs, err := adapters.NewSqsTransportAdapter(ctx, os.Getenv("PAYMENTS_QUEUE_URL"))
+if err != nil {
+    log.Fatal(err)
+}
+
+transport := middleware.WithRetry(sqs, middleware.RetryOptions{MaxAttempts: 3})
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
+```
+
+### Constructor
+
+```go
+NewSqsTransportAdapter(ctx context.Context, queueURL string, optFns ...func(*config.LoadOptions) error) (*SqsTransportAdapter, error)
+NewSqsTransportAdapterWithClient(client *sqs.Client, queueURL string) *SqsTransportAdapter
+```
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

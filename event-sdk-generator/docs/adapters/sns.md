@@ -132,3 +132,56 @@ SnsTransportAdapter(topic_arn: str, region: str | None = None)
 ```bash
 pip install "eventgen-runtime-python[aws]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+    "os"
+
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+    "github.com/company/generated-events-sdk/payments"
+)
+
+ctx := context.Background()
+
+sns, err := adapters.NewSnsTransportAdapter(ctx, os.Getenv("PAYMENTS_TOPIC_ARN"))
+if err != nil {
+    log.Fatal(err)
+}
+
+transport := middleware.WithLogging(
+    middleware.WithRetry(sns, middleware.RetryOptions{MaxAttempts: 3}),
+    nil, // nil = slog.Default()
+)
+
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx,
+    payments.PaymentCreatedPayload{
+        PaymentId: "pay_123",
+        UserId:    "usr_456",
+        Amount:    100.0,
+        Currency:  "USD",
+    },
+)
+```
+
+### Constructor
+
+```go
+// Con credenciales por defecto (env vars, IAM role, ~/.aws/credentials)
+NewSnsTransportAdapter(ctx context.Context, topicArn string, optFns ...func(*config.LoadOptions) error) (*SnsTransportAdapter, error)
+
+// Con cliente SNS pre-configurado
+NewSnsTransportAdapterWithClient(client *sns.Client, topicArn string) *SnsTransportAdapter
+```
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

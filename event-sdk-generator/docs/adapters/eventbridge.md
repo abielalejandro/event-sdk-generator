@@ -118,3 +118,44 @@ EventBridgeTransportAdapter(
 ```bash
 pip install "eventgen-runtime-python[aws]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+    "os"
+
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+)
+
+ctx := context.Background()
+
+eb, err := adapters.NewEventBridgeTransportAdapter(ctx,
+    "payments-bus",
+    "payment-service", // source; "" = usa eventId como source
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+transport := middleware.WithLogging(eb, nil)
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
+```
+
+### Constructor
+
+```go
+NewEventBridgeTransportAdapter(ctx context.Context, eventBusName, source string, optFns ...func(*config.LoadOptions) error) (*EventBridgeTransportAdapter, error)
+NewEventBridgeTransportAdapterWithClient(client *eventbridge.Client, eventBusName, source string) *EventBridgeTransportAdapter
+```
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

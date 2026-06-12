@@ -17,36 +17,57 @@ Los adapters implementan la interfaz `TransportAdapter` y encapsulan la lógica 
 
 ## Patrón de uso común
 
+Cada doc de adapter incluye ejemplos en **TypeScript**, **Java**, **Python** y **Go**.
+
+**TypeScript:**
 ```ts
 import { createClient } from "@company/generated-events-sdk";
-import { <Adapter>, withRetry, withLogging } from "@eventgen/runtime-typescript";
+import { SnsTransportAdapter, withRetry, withLogging } from "@eventgen/runtime-typescript";
 
-const transport = withLogging(
-  withRetry(new <Adapter>({ /* opciones */ }), { maxAttempts: 3 })
-);
-
+const transport = withLogging(withRetry(new SnsTransportAdapter({ topicArn }), { maxAttempts: 3 }));
 const client = createClient(transport);
+await client.payments.paymentCreated.publish(payload);
+```
 
-await client.<domain>.<event>.publish({ /* payload */ });
+**Java:**
+```java
+EventClient client = new EventClient(new SnsTransportAdapter(topicArn));
+client.payments().paymentCreated().publish(payload);
+```
+
+**Python:**
+```python
+from eventgen_runtime import SnsTransportAdapter, with_retry, with_logging
+from company_events import create_client
+
+transport = with_logging(with_retry(SnsTransportAdapter(topic_arn=topic_arn), max_attempts=3))
+client = create_client(transport)
+await client.payments.payment_created.publish(payload)
+```
+
+**Go:**
+```go
+sns, _ := adapters.NewSnsTransportAdapter(ctx, topicArn)
+transport := middleware.WithLogging(middleware.WithRetry(sns, middleware.RetryOptions{MaxAttempts: 3}), nil)
+client := events.NewClient(transport)
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
 ```
 
 ## Middleware disponible
 
-| Middleware | Descripción |
-|------------|-------------|
-| `withRetry(adapter, options)` | Reintentos con backoff fijo o exponencial |
-| `withLogging(adapter, logger?)` | Logs de inicio, éxito y error con duración |
-
-Los middlewares son componibles y se aplican en cadena.
+| Middleware | TypeScript | Java | Python | Go |
+|------------|-----------|------|--------|----|
+| Retry | `withRetry(adapter, opts)` | manual / futuro | `with_retry(adapter, max_attempts)` | `middleware.WithRetry(adapter, opts)` |
+| Logging | `withLogging(adapter, logger?)` | manual / futuro | `with_logging(adapter, logger?)` | `middleware.WithLogging(adapter, logger)` |
 
 ## Lifecycle
 
-Los adapters con conexiones persistentes exponen `close()` / `disconnect()`:
+Los adapters con conexiones persistentes exponen métodos de cierre:
 
-| Adapter | TypeScript | Java |
-|---------|-----------|------|
-| Kafka | `await adapter.disconnect()` | `adapter.close()` / `try-with-resources` |
-| RabbitMQ | `await adapter.close()` | `adapter.close()` / `try-with-resources` |
-| Pub/Sub | — | `adapter.close()` / `try-with-resources` |
-| Service Bus | `await adapter.close()` | `adapter.close()` / `try-with-resources` |
-| AWS adapters | sin estado | sin estado |
+| Adapter | TypeScript | Java | Python | Go |
+|---------|-----------|------|--------|----|
+| Kafka | `disconnect()` | `close()` / try-with-resources | `disconnect()` | `Close()` |
+| RabbitMQ | `close()` | `close()` / try-with-resources | `close()` | `Close()` |
+| Pub/Sub | — | `close()` / try-with-resources | — | `Stop()` |
+| Service Bus | `close()` | `close()` / try-with-resources | — | `Close(ctx)` |
+| AWS adapters | sin estado | sin estado | sin estado | sin estado |

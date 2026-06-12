@@ -186,3 +186,61 @@ async def test_publishes_payment_created():
 ```bash
 pip install eventgen-runtime-python   # sin extras, InMemory no tiene dependencias externas
 ```
+
+## Go
+
+```go
+import (
+    "context"
+    "testing"
+
+    "github.com/eventgen/runtime-go/adapters"
+    events "github.com/company/generated-events-sdk"
+    "github.com/company/generated-events-sdk/payments"
+)
+
+func TestPublishesPaymentCreated(t *testing.T) {
+    ctx := context.Background()
+    transport := &adapters.InMemoryTransportAdapter{}
+    client := events.NewClient(transport)
+
+    _, err := client.Payments().PaymentCreated().Publish(ctx,
+        payments.PaymentCreatedPayload{
+            PaymentId: "pay_123",
+            UserId:    "usr_456",
+            Amount:    100.0,
+            Currency:  "USD",
+        },
+    )
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if len(transport.Published) != 1 {
+        t.Fatalf("expected 1 event, got %d", len(transport.Published))
+    }
+    if transport.Published[0].Envelope.EventID != "payment.created" {
+        t.Errorf("unexpected eventId: %s", transport.Published[0].Envelope.EventID)
+    }
+
+    // Limpiar entre tests
+    transport.Clear()
+}
+```
+
+### API
+
+| Método / Campo | Tipo | Descripción |
+|---|---|---|
+| `Published` | `[]RecordedEvent` | Eventos publicados en orden (thread-safe con mutex) |
+| `Clear()` | — | Vacía el slice |
+
+Cada `RecordedEvent` tiene:
+- `Envelope runtime.EventEnvelope`
+- `PublishedAt time.Time`
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

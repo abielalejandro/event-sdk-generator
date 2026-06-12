@@ -118,3 +118,43 @@ PubSubTransportAdapter(project_id: str, topic_name: str)
 ```bash
 pip install "eventgen-runtime-python[gcp]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+)
+
+ctx := context.Background()
+
+ps, err := adapters.NewPubSubTransportAdapter(ctx, "my-gcp-project", "payments-topic")
+if err != nil {
+    log.Fatal(err)
+}
+defer ps.Stop()
+
+transport := middleware.WithRetry(ps, middleware.RetryOptions{MaxAttempts: 3})
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
+```
+
+### Constructor
+
+```go
+NewPubSubTransportAdapter(ctx context.Context, projectID, topicID string) (*PubSubTransportAdapter, error)
+NewPubSubTransportAdapterWithTopic(topic *pubsub.Topic) *PubSubTransportAdapter
+```
+
+> Llamar `Stop()` al terminar para hacer flush de mensajes pendientes.
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```

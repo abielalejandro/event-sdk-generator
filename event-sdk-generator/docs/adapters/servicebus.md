@@ -120,3 +120,47 @@ ServiceBusTransportAdapter(connection_string: str, name: str)
 ```bash
 pip install "eventgen-runtime-python[azure]"
 ```
+
+## Go
+
+```go
+import (
+    "context"
+    "os"
+
+    "github.com/eventgen/runtime-go/adapters"
+    "github.com/eventgen/runtime-go/middleware"
+    events "github.com/company/generated-events-sdk"
+)
+
+ctx := context.Background()
+
+sb, err := adapters.NewServiceBusTransportAdapter(
+    os.Getenv("SERVICE_BUS_CONNECTION_STRING"),
+    "payments-queue",
+)
+if err != nil {
+    log.Fatal(err)
+}
+defer sb.Close(ctx)
+
+transport := middleware.WithRetry(sb, middleware.RetryOptions{MaxAttempts: 3})
+client := events.NewClient(transport)
+
+result, err := client.Payments().PaymentCreated().Publish(ctx, payload)
+```
+
+### Constructor
+
+```go
+NewServiceBusTransportAdapter(connectionString, queueOrTopicName string) (*ServiceBusTransportAdapter, error)
+NewServiceBusTransportAdapterWithSender(sender *azservicebus.Sender) *ServiceBusTransportAdapter
+```
+
+> Llamar `Close(ctx)` al terminar para liberar la conexión AMQP.
+
+### Dependencia
+
+```bash
+go get github.com/eventgen/runtime-go
+```
