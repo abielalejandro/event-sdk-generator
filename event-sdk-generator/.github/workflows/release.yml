@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0)"
+        required: true
+        type: string
+
+jobs:
+  tag:
+    name: Create release tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update package versions
+        run: |
+          # TypeScript packages
+          for pkg in core runtime-typescript generator-typescript generator-java generator-python cli; do
+            jq ".version = \"${{ inputs.version }}\"" packages/$pkg/package.json > /tmp/pkg.json
+            mv /tmp/pkg.json packages/$pkg/package.json
+          done
+          # Python
+          sed -i "s/^version = .*/version = \"${{ inputs.version }}\"/" packages/runtime-python/pyproject.toml
+          # Java
+          sed -i "s/<version>.*<\/version>/<version>${{ inputs.version }}<\/version>/" packages/runtime-java/pom.xml
+
+      - name: Commit version bump
+        run: |
+          git add packages/*/package.json packages/runtime-python/pyproject.toml packages/runtime-java/pom.xml
+          git commit -m "chore: bump version to ${{ inputs.version }}"
+
+      - name: Create and push tag
+        run: |
+          git tag v${{ inputs.version }}
+          git push origin master
+          git push origin v${{ inputs.version }}
