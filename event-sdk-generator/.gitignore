@@ -1,6 +1,56 @@
-node_modules
-dist
-.next
-generated
+# Dependencies
+node_modules/
+
+# Generated SDKs and build output
+generated/
+dist/
+build/
+target/
+.next/
+out/
+*.tsbuildinfo
+
+# Tests and coverage
+coverage/
+test-results/
+.nyc_output/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Go
+*.test
+*.prof
+coverage.out
+
+# Environment and secrets
 .env
+.env.*
+!.env.example
+
+# Tool caches
+.cache/
+.turbo/
+.eslintcache
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
+Thumbs.db
