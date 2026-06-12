@@ -9,6 +9,14 @@
     "java": {
       "out": "./generated/java",
       "package": "com.company.events"
+    },
+    "python": {
+      "out": "./generated/python",
+      "packageName": "company_events"
+    },
+    "go": {
+      "out": "./generated/go",
+      "modulePath": "github.com/company/generated-events-sdk"
     }
   }
 }

@@ -37,6 +37,11 @@ http://localhost:3000
 ```bash
 pnpm generate:ts
 pnpm generate:java
+pnpm generate:python
+pnpm generate:go
+
+# Generar todos los SDKs
+pnpm generate
 ```
 
 Las salidas se crean en:
@@ -44,6 +49,8 @@ Las salidas se crean en:
 ```txt
 generated/typescript
 generated/java
+generated/python
+generated/go
 ```
 
 ## Estructura

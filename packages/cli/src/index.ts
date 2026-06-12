@@ -80,7 +80,7 @@ program.command("build-catalog")
   });
 
 program.command("generate")
-  .requiredOption("--target <target>", "typescript | java")
+  .requiredOption("--target <target>", "typescript | java | python | go")
   .option("--events <dir>", "Directory with event definitions")
   .option("--bindings <file>", "Binding file path")
   .option("--out <dir>", "Output directory for generated SDK")
@@ -103,11 +103,11 @@ program.command("generate")
       generateJavaSdk({ events, bindings, outDir, javaPackage });
     } else if (opts.target === "python") {
       const outDir = resolve(opts.out, cfg.generate?.python?.out, DEFAULTS.generate.python.out!);
-      const packageName = opts.packageName ?? cfg.generate?.python?.packageName ?? DEFAULTS.generate.python.packageName;
+      const packageName = opts.pythonPackage ?? cfg.generate?.python?.packageName ?? DEFAULTS.generate.python.packageName;
       generatePythonSdk({ events, bindings, outDir, packageName });
     } else if (opts.target === "go") {
       const outDir = resolve(opts.out, cfg.generate?.go?.out, DEFAULTS.generate.go.out!);
-      const modulePath = opts.modulePath ?? cfg.generate?.go?.modulePath ?? DEFAULTS.generate.go.modulePath;
+      const modulePath = opts.goModule ?? cfg.generate?.go?.modulePath ?? DEFAULTS.generate.go.modulePath;
       generateGoSdk({ events, bindings, outDir, modulePath });
     } else {
       throw new Error(`Unsupported target: ${opts.target}`);
