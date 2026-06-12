@@ -1,0 +1,14 @@
+{
+  "events": "./events/definitions",
+  "bindings": "./events/bindings/dev.json",
+  "catalog": "./apps/web-catalog/public/catalog.json",
+  "generate": {
+    "typescript": {
+      "out": "./generated/typescript"
+    },
+    "java": {
+      "out": "./generated/java",
+      "package": "com.company.events"
+    }
+  }
+}

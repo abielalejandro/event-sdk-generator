@@ -1,0 +1,24 @@
+{
+  "name": "@eventgen/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "event-sdk": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@eventgen/core": "workspace:*",
+    "@eventgen/generator-java": "workspace:*",
+    "@eventgen/generator-python": "workspace:^",
+    "@eventgen/generator-typescript": "workspace:*",
+    "commander": "^12.1.0",
+    "tsx": "^4.19.2",
+    "@eventgen/generator-go": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11"
+  }
+}
