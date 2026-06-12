@@ -27,7 +27,7 @@ export type BindingFile = {
 export type Catalog = {
   generatedAt: string;
   environment: string;
-  events: Array<EventDefinition & { destination?: BindingFile["bindings"][number]["destination"]; usage: { typescript: string; java: string } }>;
+  events: Array<EventDefinition & { destination?: BindingFile["bindings"][number]["destination"]; usage: { typescript: string; java: string; python: string; go: string } }>;
 };
 
 export function readJson<T>(filePath: string): T {
@@ -104,7 +104,9 @@ export function buildCatalog(events: EventDefinition[], bindings: BindingFile): 
         destination: binding?.destination,
         usage: {
           typescript: `await client.${event.domain}.${toLowerCamelCase(event.name)}.publish(payload);`,
-          java: `client.${event.domain}().${toLowerCamelCase(event.name)}().publish(payload);`
+          java: `client.${event.domain}().${toLowerCamelCase(event.name)}().publish(payload);`,
+          python: `await client.${event.domain}.${toSnakeCase(event.name)}.publish(payload)`,
+          go: `client.${toPascalCase(event.domain)}().${toPascalCase(event.name)}().Publish(ctx, payload)`
         }
       };
     })
@@ -118,6 +120,13 @@ export function toCamelCase(input: string): string {
 function toLowerCamelCase(input: string): string {
   const s = toCamelCase(input);
   return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+function toSnakeCase(input: string): string {
+  return toCamelCase(input)
+    .replace(/([A-Z])/g, "_$1")
+    .toLowerCase()
+    .replace(/^_/, "");
 }
 
 export function toPascalCase(input: string): string {

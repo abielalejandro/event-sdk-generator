@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-12T02:38:25.926Z",
+  "generatedAt": "2026-06-12T16:04:18.453Z",
   "environment": "dev",
   "events": [
     {
@@ -61,7 +61,9 @@
       },
       "usage": {
         "typescript": "await client.payments.paymentCreated.publish(payload);",
-        "java": "client.payments().paymentCreated().publish(payload);"
+        "java": "client.payments().paymentCreated().publish(payload);",
+        "python": "await client.payments.payment_created.publish(payload)",
+        "go": "client.Payments().PaymentCreated().Publish(ctx, payload)"
       }
     }
   ]

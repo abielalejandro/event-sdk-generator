@@ -9,7 +9,7 @@ type Event = {
   description: string;
   tags?: string[];
   destination?: { provider: string };
-  usage?: { typescript: string; java: string };
+  usage?: { typescript: string; java: string; python: string; go: string };
   payloadSchema?: unknown;
 };
 
@@ -56,6 +56,10 @@ export function EventList({ events }: { events: Event[] }) {
             <pre>{event.usage?.typescript}</pre>
             <h3>Java</h3>
             <pre>{event.usage?.java}</pre>
+            <h3>Python</h3>
+            <pre>{event.usage?.python}</pre>
+            <h3>Go</h3>
+            <pre>{event.usage?.go}</pre>
             <h3>Payload Schema</h3>
             <pre>{JSON.stringify(event.payloadSchema, null, 2)}</pre>
           </article>

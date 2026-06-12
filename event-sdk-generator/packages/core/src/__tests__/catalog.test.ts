@@ -42,4 +42,14 @@ describe("buildCatalog", () => {
     const catalog = buildCatalog([event], bindings);
     expect(catalog.events[0].usage.java).toBe("client.payments().paymentCreated().publish(payload);");
   });
+
+  it("generates correct python usage string", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].usage.python).toBe("await client.payments.payment_created.publish(payload)");
+  });
+
+  it("generates correct go usage string", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].usage.go).toBe("client.Payments().PaymentCreated().Publish(ctx, payload)");
+  });
 });
