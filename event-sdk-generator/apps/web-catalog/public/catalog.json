@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-06-12T02:38:25.926Z",
+  "environment": "dev",
+  "events": [
+    {
+      "id": "payment.created",
+      "version": "1.0.0",
+      "domain": "payments",
+      "name": "Payment Created",
+      "description": "Evento emitido cuando se crea un pago.",
+      "producer": "payment-service",
+      "consumers": [
+        "billing-service",
+        "notification-service"
+      ],
+      "tags": [
+        "payment",
+        "billing",
+        "async"
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "required": [
+          "paymentId",
+          "userId",
+          "amount",
+          "currency"
+        ],
+        "properties": {
+          "paymentId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "ARS",
+              "EUR"
+            ]
+          }
+        }
+      },
+      "examples": [
+        {
+          "paymentId": "pay_123",
+          "userId": "usr_456",
+          "amount": 120.5,
+          "currency": "USD"
+        }
+      ],
+      "destination": {
+        "provider": "aws.sns",
+        "topicArnRef": "PAYMENTS_TOPIC_ARN",
+        "regionRef": "AWS_REGION"
+      },
+      "usage": {
+        "typescript": "await client.payments.paymentCreated.publish(payload);",
+        "java": "client.payments().paymentCreated().publish(payload);"
+      }
+    }
+  ]
+}

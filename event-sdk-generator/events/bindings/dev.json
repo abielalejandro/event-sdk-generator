@@ -1,0 +1,14 @@
+{
+  "environment": "dev",
+  "bindings": [
+    {
+      "eventId": "payment.created",
+      "version": "1.0.0",
+      "destination": {
+        "provider": "aws.sns",
+        "topicArnRef": "PAYMENTS_TOPIC_ARN",
+        "regionRef": "AWS_REGION"
+      }
+    }
+  ]
+}

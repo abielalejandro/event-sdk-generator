@@ -1,0 +1,102 @@
+#!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+import { Command } from "commander";
+import { buildCatalog, loadEventDefinitions, readJson, validateDefinitions, validateBindings, type BindingFile } from "@eventgen/core";
+import { generateTypeScriptSdk } from "@eventgen/generator-typescript";
+import { generateJavaSdk } from "@eventgen/generator-java";
+
+type Config = {
+  events?: string;
+  bindings?: string;
+  catalog?: string;
+  generate?: {
+    typescript?: { out?: string };
+    java?: { out?: string; package?: string };
+  };
+};
+
+const DEFAULTS: Required<Omit<Config, "generate">> & { generate: Required<Config["generate"] & object> } = {
+  events: "./events/definitions",
+  bindings: "./events/bindings/dev.json",
+  catalog: "./apps/web-catalog/public/catalog.json",
+  generate: {
+    typescript: { out: "./generated/typescript" },
+    java: { out: "./generated/java", package: "com.company.events" },
+  },
+};
+
+function loadConfig(): Config {
+  const configPath = path.resolve(process.cwd(), "eventgen.config.json");
+  if (fs.existsSync(configPath)) {
+    return JSON.parse(fs.readFileSync(configPath, "utf8")) as Config;
+  }
+  return {};
+}
+
+function resolve(flag: string | undefined, configValue: string | undefined, defaultValue: string): string {
+  return flag ?? configValue ?? defaultValue;
+}
+
+const program = new Command();
+program.name("event-sdk").description("Event SDK Generator CLI").version("0.1.0");
+
+program.command("validate")
+  .option("--events <dir>", "Directory with event definitions")
+  .option("--bindings <file>", "Binding file path")
+  .action((opts) => {
+    const cfg = loadConfig();
+    const eventsDir = resolve(opts.events, cfg.events, DEFAULTS.events);
+    const bindingsFile = resolve(opts.bindings, cfg.bindings, DEFAULTS.bindings);
+    const events = loadEventDefinitions(eventsDir);
+    const bindings = readJson<BindingFile>(bindingsFile);
+    const errors = [
+      ...validateDefinitions(events),
+      ...validateBindings(bindings, events),
+    ];
+    if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
+    console.log(`OK: ${events.length} event definition(s) and ${bindings.bindings.length} binding(s) valid.`);
+  });
+
+program.command("build-catalog")
+  .option("--events <dir>", "Directory with event definitions")
+  .option("--bindings <file>", "Binding file path")
+  .option("--out <file>", "Output catalog.json path")
+  .action((opts) => {
+    const cfg = loadConfig();
+    const eventsDir = resolve(opts.events, cfg.events, DEFAULTS.events);
+    const bindingsFile = resolve(opts.bindings, cfg.bindings, DEFAULTS.bindings);
+    const outFile = resolve(opts.out, cfg.catalog, DEFAULTS.catalog);
+    const catalog = buildCatalog(loadEventDefinitions(eventsDir), readJson<BindingFile>(bindingsFile));
+    fs.mkdirSync(path.dirname(outFile), { recursive: true });
+    fs.writeFileSync(outFile, JSON.stringify(catalog, null, 2));
+    console.log(`Catalog written to ${outFile}`);
+  });
+
+program.command("generate")
+  .requiredOption("--target <target>", "typescript | java")
+  .option("--events <dir>", "Directory with event definitions")
+  .option("--bindings <file>", "Binding file path")
+  .option("--out <dir>", "Output directory for generated SDK")
+  .option("--java-package <pkg>", "Java package name")
+  .action((opts) => {
+    const cfg = loadConfig();
+    const eventsDir = resolve(opts.events, cfg.events, DEFAULTS.events);
+    const bindingsFile = resolve(opts.bindings, cfg.bindings, DEFAULTS.bindings);
+    const events = loadEventDefinitions(eventsDir);
+    const bindings = readJson<BindingFile>(bindingsFile);
+
+    if (opts.target === "typescript") {
+      const outDir = resolve(opts.out, cfg.generate?.typescript?.out, DEFAULTS.generate.typescript.out!);
+      generateTypeScriptSdk({ events, bindings, outDir });
+    } else if (opts.target === "java") {
+      const outDir = resolve(opts.out, cfg.generate?.java?.out, DEFAULTS.generate.java.out!);
+      const javaPackage = resolve(opts.javaPackage, cfg.generate?.java?.package, DEFAULTS.generate.java.package!);
+      generateJavaSdk({ events, bindings, outDir, javaPackage });
+    } else {
+      throw new Error(`Unsupported target: ${opts.target}`);
+    }
+    console.log(`${opts.target} SDK generated.`);
+  });
+
+program.parse();

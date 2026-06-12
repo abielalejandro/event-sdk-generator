@@ -1,0 +1,23 @@
+{
+  "name": "@eventgen/runtime-typescript",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.1067.0",
+    "@aws-sdk/client-sns": "^3.0.0",
+    "@aws-sdk/client-sqs": "^3.1067.0",
+    "@azure/service-bus": "^7.9.5",
+    "@google-cloud/pubsub": "^5.3.1",
+    "@types/amqplib": "^0.10.8",
+    "amqplib": "^2.0.1",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11"
+  }
+}
