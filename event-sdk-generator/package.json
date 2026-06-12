@@ -10,7 +10,8 @@
     "generate:java": "pnpm --filter @eventgen/cli dev generate --target java",
     "dev:web": "pnpm --filter @eventgen/web-catalog dev",
     "build:web": "pnpm build:catalog && pnpm --filter @eventgen/web-catalog build",
-    "test": "pnpm -r --filter \"@eventgen/*\" test"
+    "test": "pnpm -r --filter \"@eventgen/*\" test",
+    "test:ci": "pnpm -r --filter \"@eventgen/*\" test:ci"
   },
   "devDependencies": {
     "typescript": "^5.5.4"

@@ -70,3 +70,35 @@ jobs:
       - run: pip install hatchling
       - run: python -m hatchling build
         working-directory: packages/runtime-python
+
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    needs: [build-typescript]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build packages before testing
+        run: |
+          pnpm --filter @eventgen/core build
+          pnpm --filter @eventgen/runtime-typescript build
+          pnpm --filter @eventgen/generator-typescript build
+          pnpm --filter @eventgen/generator-java build
+          pnpm --filter @eventgen/generator-python build
+      - name: Run all tests
+        run: pnpm test:ci
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: packages/*/test-results/junit.xml
+          retention-days: 30

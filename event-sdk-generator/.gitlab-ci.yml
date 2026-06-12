@@ -1,6 +1,7 @@
 stages:
   - validate
   - build
+  - test
   - publish
   - release
 
@@ -88,6 +89,25 @@ build:python:
     paths:
       - packages/runtime-python/dist/
     expire_in: 1 hour
+
+# ─── TEST ────────────────────────────────────────────────────────────────────
+
+test:typescript:
+  <<: [*pnpm, *only-mr-and-master]
+  stage: test
+  needs: [build:typescript]
+  script:
+    - pnpm --filter @eventgen/core build
+    - pnpm --filter @eventgen/runtime-typescript build
+    - pnpm --filter @eventgen/generator-typescript build
+    - pnpm --filter @eventgen/generator-java build
+    - pnpm --filter @eventgen/generator-python build
+    - pnpm test:ci
+  artifacts:
+    when: always
+    reports:
+      junit: packages/*/test-results/*.xml
+    expire_in: 1 week
 
 # ─── PUBLISH ─────────────────────────────────────────────────────────────────
 
