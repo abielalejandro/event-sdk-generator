@@ -86,3 +86,35 @@ attributes:
 - Las credenciales GCP se resuelven via Application Default Credentials (ADC): `GOOGLE_APPLICATION_CREDENTIALS` env, `gcloud auth application-default login`, o service account adjunta al recurso.
 - En Java, el `Publisher` es asíncrono internamente — `close()` espera hasta 30 segundos para que los mensajes en vuelo se confirmen.
 - El `messageId` retornado es el ID asignado por Pub/Sub al mensaje.
+
+## Python
+
+```python
+from eventgen_runtime import PubSubTransportAdapter, with_retry, with_logging
+from company_events import create_client
+
+transport = with_logging(
+    with_retry(
+        PubSubTransportAdapter(
+            project_id="my-gcp-project",
+            topic_name="payments-topic",
+        ),
+        max_attempts=3,
+    )
+)
+
+client = create_client(transport)
+result = await client.payments.payment_created.publish(payload)
+```
+
+### Constructor
+
+```python
+PubSubTransportAdapter(project_id: str, topic_name: str)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[gcp]"
+```

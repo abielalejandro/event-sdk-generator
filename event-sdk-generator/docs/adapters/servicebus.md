@@ -87,3 +87,36 @@ applicationProperties:
 - Service Bus no retorna un ID del servidor al enviar sincrónicamente — el `messageId` es el del mensaje local.
 - Para enviar a un **topic** (en vez de queue), usar el mismo constructor con el nombre del topic; los subscribers reciben por sus subscriptions.
 - Requiere cerrar el sender (`close()`) al terminar para liberar la conexión AMQP subyacente.
+
+## Python
+
+```python
+import os
+from eventgen_runtime import ServiceBusTransportAdapter, with_retry, with_logging
+from company_events import create_client
+
+transport = with_logging(
+    with_retry(
+        ServiceBusTransportAdapter(
+            connection_string=os.environ["SERVICE_BUS_CONNECTION_STRING"],
+            name="payments-queue",
+        ),
+        max_attempts=3,
+    )
+)
+
+client = create_client(transport)
+result = await client.payments.payment_created.publish(payload)
+```
+
+### Constructor
+
+```python
+ServiceBusTransportAdapter(connection_string: str, name: str)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[azure]"
+```

@@ -86,3 +86,36 @@ new SqsTransportAdapter(SqsClient client, String queueUrl)
 - El `messageId` retornado es el `MessageId` asignado por SQS.
 - Para FIFO queues (`.fifo`), se requiere `MessageGroupId` (extensión futura).
 - SQS no hace fan-out — si necesitás múltiples consumidores, combiná con SNS → SQS.
+
+## Python
+
+```python
+import os
+from eventgen_runtime import SqsTransportAdapter, with_retry, with_logging
+from company_events import create_client
+
+transport = with_logging(
+    with_retry(
+        SqsTransportAdapter(
+            queue_url=os.environ["PAYMENTS_QUEUE_URL"],
+            region="us-east-1",
+        ),
+        max_attempts=3,
+    )
+)
+
+client = create_client(transport)
+result = await client.payments.payment_created.publish(payload)
+```
+
+### Constructor
+
+```python
+SqsTransportAdapter(queue_url: str, region: str | None = None)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[aws]"
+```

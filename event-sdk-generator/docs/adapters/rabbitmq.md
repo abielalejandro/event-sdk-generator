@@ -98,3 +98,40 @@ RabbitMQ no asigna un ID al publicar — el `messageId` es un UUID generado loca
 - **Exchange pre-existente:** el exchange debe estar declarado en RabbitMQ antes de publicar. El adapter no crea ni declara exchanges.
 - **TLS:** usar `amqps://` en la URL para conexiones seguras.
 - **Confirmaciones:** el adapter usa publish sin `confirmSelect()` — para publisher confirms (garantía de entrega), se necesita configurar el channel manualmente.
+
+## Python
+
+```python
+from eventgen_runtime import RabbitMQTransportAdapter, with_retry, with_logging
+from company_events import create_client
+
+rabbit_adapter = RabbitMQTransportAdapter(
+    url="amqp://user:password@rabbitmq-host:5672",
+    exchange="events",
+    routing_key="payment.created",   # opcional, default: event_id
+)
+
+transport = with_logging(with_retry(rabbit_adapter, max_attempts=3))
+client = create_client(transport)
+
+result = await client.payments.payment_created.publish(payload)
+
+# Cerrar al terminar
+await rabbit_adapter.close()
+```
+
+### Constructor
+
+```python
+RabbitMQTransportAdapter(
+    url: str,
+    exchange: str,
+    routing_key: str | None = None,
+)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[rabbitmq]"
+```

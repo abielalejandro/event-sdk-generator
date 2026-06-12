@@ -83,3 +83,38 @@ new EventBridgeTransportAdapter(EventBridgeClient client, String eventBusName, S
 - Si `FailedEntryCount > 0` en la respuesta de AWS, el adapter lanza excepción con `ErrorCode` y `ErrorMessage`.
 - El campo `DetailType` siempre es el `eventId` del evento (ej: `"payment.created"`).
 - Útil para crear reglas de filtrado en EventBridge por `DetailType` o contenido del `Detail`.
+
+## Python
+
+```python
+import os
+from eventgen_runtime import EventBridgeTransportAdapter, with_logging
+from company_events import create_client
+
+transport = with_logging(
+    EventBridgeTransportAdapter(
+        event_bus_name="payments-bus",
+        source="payment-service",      # opcional, default: event_id
+        region="us-east-1",
+    )
+)
+
+client = create_client(transport)
+result = await client.payments.payment_created.publish(payload)
+```
+
+### Constructor
+
+```python
+EventBridgeTransportAdapter(
+    event_bus_name: str,
+    source: str | None = None,
+    region: str | None = None,
+)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[aws]"
+```

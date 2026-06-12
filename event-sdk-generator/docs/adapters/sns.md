@@ -90,3 +90,45 @@ new SnsTransportAdapter(SnsClient client, String topicArn)
 - Las credenciales AWS se resuelven automáticamente vía la Default Credential Chain (env vars, IAM role, ~/.aws/credentials).
 - El `messageId` retornado es el `MessageId` asignado por SNS.
 - Para FIFO topics, usar la versión con `MessageGroupId` (extensión futura).
+
+## Python
+
+```python
+import os
+from eventgen_runtime import SnsTransportAdapter, with_retry, with_logging
+from company_events import create_client
+
+transport = with_logging(
+    with_retry(
+        SnsTransportAdapter(
+            topic_arn=os.environ["PAYMENTS_TOPIC_ARN"],
+            region="us-east-1",        # opcional, default: AWS_REGION env
+        ),
+        max_attempts=3,
+    )
+)
+
+client = create_client(transport)
+
+result = await client.payments.payment_created.publish(
+    PaymentsPaymentCreatedPayload(
+        payment_id="pay_123",
+        user_id="usr_456",
+        amount=Decimal("100"),
+        currency="USD",
+    )
+)
+print(result.message_id)  # MessageId de AWS SNS
+```
+
+### Constructor
+
+```python
+SnsTransportAdapter(topic_arn: str, region: str | None = None)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[aws]"
+```

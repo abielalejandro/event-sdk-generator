@@ -114,3 +114,75 @@ void shouldPublishPaymentCreatedEvent() {
   };
   const transport = withRetry(failing, { maxAttempts: 3, delayMs: 0 });
   ```
+
+## Python
+
+```python
+from eventgen_runtime import InMemoryTransportAdapter
+from company_events import create_client, PaymentsPaymentCreatedPayload
+from decimal import Decimal
+
+transport = InMemoryTransportAdapter()
+client = create_client(transport)
+
+await client.payments.payment_created.publish(
+    PaymentsPaymentCreatedPayload(
+        payment_id="pay_123",
+        user_id="usr_456",
+        amount=Decimal("100"),
+        currency="USD",
+    )
+)
+
+# Assertions
+assert len(transport.published) == 1
+event = transport.published[0]
+assert event.envelope.event_id == "payment.created"
+assert event.envelope.payload["payment_id"] == "pay_123"
+
+# Limpiar entre tests
+transport.clear()
+```
+
+### API
+
+| Atributo / Método | Tipo | Descripción |
+|---|---|---|
+| `published` | `list[RecordedEvent]` | Eventos publicados en orden |
+| `clear()` | `None` | Vacía la lista |
+
+Cada `RecordedEvent` tiene:
+- `envelope: EventEnvelope`
+- `published_at: datetime`
+
+### Ejemplo con pytest
+
+```python
+import pytest
+from eventgen_runtime import InMemoryTransportAdapter
+from company_events import create_client, PaymentsPaymentCreatedPayload
+from decimal import Decimal
+
+@pytest.mark.asyncio
+async def test_publishes_payment_created():
+    transport = InMemoryTransportAdapter()
+    client = create_client(transport)
+
+    await client.payments.payment_created.publish(
+        PaymentsPaymentCreatedPayload(
+            payment_id="pay_123",
+            user_id="usr_456",
+            amount=Decimal("100"),
+            currency="USD",
+        )
+    )
+
+    assert len(transport.published) == 1
+    assert transport.published[0].envelope.event_id == "payment.created"
+```
+
+### Dependencia
+
+```bash
+pip install eventgen-runtime-python   # sin extras, InMemory no tiene dependencias externas
+```

@@ -91,3 +91,41 @@ El `messageId` retornado tiene el formato `{partition}-{offset}`, por ejemplo `"
 - **Lifecycle:** el producer se conecta en el primer `publish()` (lazy). Llamar a `disconnect()` (TS) o `close()` (Java) al apagar el servicio para hacer flush de mensajes pendientes.
 - **Serialization:** key y value usan `StringSerializer`. Para Avro o Protobuf, proveer un `KafkaProducer` pre-configurado.
 - **Idempotencia:** para garantías exactly-once, agregar `enable.idempotence=true` en `producerConfig` (Java) o equivalente en el constructor de `Kafka` (TS).
+
+## Python
+
+```python
+from eventgen_runtime import KafkaTransportAdapter, with_logging
+from company_events import create_client
+
+kafka_adapter = KafkaTransportAdapter(
+    topic="payments-topic",
+    bootstrap_servers=["kafka-broker:9092"],
+    client_id="payment-service",    # opcional, default: "eventgen"
+)
+
+transport = with_logging(kafka_adapter)
+client = create_client(transport)
+
+result = await client.payments.payment_created.publish(payload)
+print(result.message_id)  # "0-42" → partition 0, offset 42
+
+# Desconectar al apagar el proceso
+await kafka_adapter.disconnect()
+```
+
+### Constructor
+
+```python
+KafkaTransportAdapter(
+    topic: str,
+    bootstrap_servers: str | list[str],
+    client_id: str = "eventgen",
+)
+```
+
+### Dependencia
+
+```bash
+pip install "eventgen-runtime-python[kafka]"
+```
