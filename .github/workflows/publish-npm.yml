@@ -1,0 +1,67 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    name: Build and publish TypeScript packages to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # needed for npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: |
+          pnpm --filter @eventgen/core build
+          pnpm --filter @eventgen/runtime-typescript build
+          pnpm --filter @eventgen/generator-typescript build
+          pnpm --filter @eventgen/generator-java build
+          pnpm --filter @eventgen/generator-python build
+
+      - name: Publish @eventgen/core
+        run: pnpm --filter @eventgen/core publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @eventgen/runtime-typescript
+        run: pnpm --filter @eventgen/runtime-typescript publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @eventgen/generator-typescript
+        run: pnpm --filter @eventgen/generator-typescript publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @eventgen/generator-java
+        run: pnpm --filter @eventgen/generator-java publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @eventgen/generator-python
+        run: pnpm --filter @eventgen/generator-python publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @eventgen/cli
+        run: pnpm --filter @eventgen/cli publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
