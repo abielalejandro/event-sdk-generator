@@ -13,6 +13,7 @@ type Event = {
   destination?: { provider: string };
   usage?: { typescript: string; java: string; python: string; go: string };
   consumerUsage?: { typescript: string; java: string; python: string; go: string };
+  backgroundConsumerUsage?: { typescript: string; java: string; python: string; go: string };
   payloadSchema?: unknown;
 };
 
@@ -82,6 +83,8 @@ export function EventList({ events }: { events: Event[] }) {
                 <pre>{event.usage?.[key]}</pre>
                 <p className="usage-label">Consume</p>
                 <pre>{event.consumerUsage?.[key] ?? "not-generated"}</pre>
+                <p className="usage-label">Run in background</p>
+                <pre>{event.backgroundConsumerUsage?.[key] ?? "not-generated"}</pre>
               </section>
             ))}
             <h3>Payload Schema</h3>

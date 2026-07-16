@@ -192,3 +192,110 @@ SQS message body -> EventEnvelope -> consumer.handle(envelope) -> ack / retry / 
 ```
 
 Esto mantiene el SDK generado agnostico al transporte y deja las decisiones operativas en el worker.
+
+---
+
+## Ejecutar consumers en background
+
+El runtime tambien puede conectar una fuente de mensajes entrante con el consumer generado.
+
+Flujo:
+
+```txt
+MessageSource -> ConsumerRunner -> generated consumer -> typed handler -> ack / retry / DLQ
+```
+
+`TransportAdapter` sigue siendo solo para publicar. Para escuchar mensajes se usan `MessageSource` inbound como SQS o Kafka.
+
+### TypeScript
+
+```ts
+import { SqsMessageSource, runConsumer } from "@eventgen/runtime-typescript";
+import { createConsumer } from "@company/generated-events-sdk";
+
+const consumer = createConsumer({
+  payments: {
+    paymentCreated: async (payload, envelope) => {
+      console.log(payload.paymentId, envelope.metadata.traceId);
+    },
+  },
+});
+
+const runner = runConsumer({
+  source: new SqsMessageSource({ queueUrl: process.env.PAYMENTS_QUEUE_URL! }),
+  consumer,
+  concurrency: 5,
+  unhandled: "ack",
+});
+
+await runner.start();
+```
+
+### Java
+
+```java
+EventConsumer consumer = EventConsumer.builder()
+    .payments()
+    .paymentCreated((payload, envelope) -> {
+        System.out.println(payload.getPaymentId());
+    })
+    .build();
+
+ConsumerRunner runner = ConsumerRunner.builder()
+    .source(new SqsMessageSource(queueUrl))
+    .consumer(consumer)
+    .concurrency(5)
+    .build();
+
+runner.start();
+```
+
+### Python
+
+```python
+consumer = create_consumer(
+    payments={
+        "payment_created": handle_payment_created,
+    }
+)
+
+runner = run_consumer(
+    source=SqsMessageSource(queue_url),
+    consumer=consumer,
+    concurrency=5,
+    unhandled="ack",
+)
+
+await runner.start()
+```
+
+### Go
+
+```go
+consumer := events.NewConsumer(events.ConsumerHandlers{
+    Payments: &events.PaymentsConsumerHandlers{
+        PaymentCreated: handlePaymentCreated,
+    },
+})
+
+source, err := adapters.NewSqsMessageSource(ctx, queueURL)
+if err != nil {
+    return err
+}
+
+runner := runtime.NewConsumerRunner(source, consumer, runtime.ConsumerRunnerOptions{
+    Concurrency: 5,
+    Unhandled: runtime.MessageActionAck,
+})
+
+return runner.Start(ctx)
+```
+
+### SNS y EventBridge
+
+SNS y EventBridge no se escuchan directamente desde el runner. Para esos casos se consume desde el destino conectado:
+
+```txt
+SNS -> SQS -> SqsMessageSource -> ConsumerRunner
+EventBridge -> SQS -> SqsMessageSource -> ConsumerRunner
+```
