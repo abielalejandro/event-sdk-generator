@@ -4,8 +4,8 @@ Define el proceso de desarrollo y contribución al proyecto.
 
 ## Ramas
 
-- **`master`** es la rama estable. No se commitea directamente sobre ella.
-- Toda nueva especificación, feature o fix debe partir de una rama propia creada desde `master`.
+- **`main`** es la rama estable. No se commitea directamente sobre ella.
+- Toda nueva especificación, feature o fix debe partir de una rama propia creada desde `main`.
 
 ## Convención de nombres de rama
 
@@ -19,9 +19,9 @@ chore/<descripción>           # tareas de mantenimiento
 ## Flujo obligatorio para agregar una nueva spec
 
 ```bash
-# 1. Partir siempre desde master actualizado
-git checkout master
-git pull origin master
+# 1. Partir siempre desde main actualizado
+git checkout main
+git pull origin main
 
 # 2. Crear la rama con el prefijo spec/
 git checkout -b spec/<nombre>
@@ -33,13 +33,13 @@ git checkout -b spec/<nombre>
 git add specs/<numero>-<nombre>.md
 git commit -m "spec: agregar spec <numero> — <descripción>"
 
-# 5. Abrir PR hacia master para revisión
+# 5. Abrir PR hacia main para revisión
 ```
 
 ## Ejemplo
 
 ```bash
-git checkout master
+git checkout main
 git checkout -b spec/retry-policy
 # ... crear specs/012-retry-policy.md ...
 git add specs/012-retry-policy.md
@@ -50,5 +50,5 @@ git commit -m "spec: agregar spec 012 — retry policy avanzado"
 
 - Una rama por spec. No agrupar múltiples specs en una sola rama.
 - El nombre de la rama debe reflejar el contenido de la spec.
-- La rama se mergea a `master` solo después de revisión.
+- La rama se mergea a `main` solo después de revisión.
 - La numeración de specs es correlativa y no debe reutilizarse.
