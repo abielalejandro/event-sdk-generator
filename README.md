@@ -57,6 +57,12 @@ generated/python
 generated/go
 ```
 
+## Consumidores
+
+Los SDKs generados incluyen helpers para construir consumidores tipados por evento: handlers, metadata `consumers` y routers por `eventId@version`.
+
+Ver ejemplos por lenguaje en [`docs/consumers.md`](docs/consumers.md).
+
 ## Estructura
 
 ```txt
