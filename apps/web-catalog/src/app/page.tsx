@@ -2,13 +2,23 @@ import { EventList } from "./EventList";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+export const dynamic = "force-dynamic";
+
 async function getCatalog() {
-  try {
-    const catalogPath = path.join(process.cwd(), "public", "catalog.json");
-    return JSON.parse(await fs.readFile(catalogPath, "utf8"));
-  } catch {
-    return { generatedAt: null, environment: "unknown", events: [] };
+  const candidates = [
+    path.join(process.cwd(), "public", "catalog.json"),
+    path.join(process.cwd(), "apps", "web-catalog", "public", "catalog.json")
+  ];
+
+  for (const catalogPath of candidates) {
+    try {
+      return JSON.parse(await fs.readFile(catalogPath, "utf8"));
+    } catch {
+      // Try the next known monorepo layout.
+    }
   }
+
+  return { generatedAt: null, environment: "unknown", events: [] };
 }
 
 export default async function Home() {
