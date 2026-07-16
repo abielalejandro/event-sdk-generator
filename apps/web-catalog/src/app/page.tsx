@@ -1,10 +1,11 @@
 import { EventList } from "./EventList";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 async function getCatalog() {
   try {
-    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-    const res = await fetch(`${base}/catalog.json`, { cache: "no-store" });
-    return await res.json();
+    const catalogPath = path.join(process.cwd(), "public", "catalog.json");
+    return JSON.parse(await fs.readFile(catalogPath, "utf8"));
   } catch {
     return { generatedAt: null, environment: "unknown", events: [] };
   }
