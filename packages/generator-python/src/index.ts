@@ -34,16 +34,19 @@ export function generatePythonSdk(input: { events: EventDefinition[]; bindings: 
   );
 
   // Group events by domain
-  const domainMap = new Map<string, Array<{ event: EventDefinition; className: string; publisherClass: string; methodName: string; moduleName: string }>>();
+  const domainMap = new Map<string, Array<{ event: EventDefinition; className: string; publisherClass: string; consumerClass: string; handlerName: string; methodName: string; moduleName: string }>>();
 
   for (const event of input.events) {
     const eventName = event.id.split(".").slice(1).join(".");
     const className = `${toPascalCase(event.domain)}${toPascalCase(event.name)}Payload`;
     const publisherClass = `_${toPascalCase(event.domain)}${toPascalCase(event.name)}Publisher`;
+    const consumerClass = `_${toPascalCase(event.domain)}${toPascalCase(event.name)}Consumer`;
+    const handlerName = `${toPascalCase(event.domain)}${toPascalCase(event.name)}Handler`;
     const methodName = toSnakeCase(event.name);
     const moduleName = event.id.replaceAll(".", "_");
     const props = Object.entries((event.payloadSchema.properties ?? {}) as Record<string, { type?: string }>);
     const hasDecimal = needsDecimal(Object.fromEntries(props));
+    const consumers = JSON.stringify(event.consumers ?? []);
 
     const decimalImport = hasDecimal ? "\nfrom decimal import Decimal" : "";
     const fields = props.map(([k, v]) => `    ${toSnakeCase(k)}: ${mapPython(v.type)}`).join("\n");
@@ -51,13 +54,21 @@ export function generatePythonSdk(input: { events: EventDefinition[]; bindings: 
     fs.writeFileSync(
       path.join(eventsDir, `${moduleName}.py`),
       `from __future__ import annotations
+import inspect
 from dataclasses import dataclass${decimalImport}
-from eventgen_runtime import TransportAdapter, PublishResult, build_envelope
+from collections.abc import Awaitable, Callable
+from eventgen_runtime import EventEnvelope, TransportAdapter, PublishResult, build_envelope
 
 
 @dataclass
 class ${className}:
 ${fields}
+
+
+${handlerName} = Callable[
+    [${className}, EventEnvelope],
+    Awaitable[None] | None,
+]
 
 
 class ${publisherClass}:
@@ -72,11 +83,28 @@ class ${publisherClass}:
         return await self._transport.publish(
             build_envelope("${event.id}", "${event.version}", payload.__dict__, trace_id)
         )
+
+
+class ${consumerClass}:
+    event_id = "${event.id}"
+    version = "${event.version}"
+    consumers = tuple(${consumers})
+
+    def __init__(self, handler: ${handlerName}) -> None:
+        self._handler = handler
+
+    async def handle(self, envelope: EventEnvelope) -> None:
+        if envelope.event_id != self.event_id or envelope.version != self.version:
+            raise ValueError(f"Unexpected event envelope: {envelope.event_id}@{envelope.version}")
+        payload = envelope.payload if isinstance(envelope.payload, ${className}) else ${className}(**envelope.payload)
+        result = self._handler(payload, envelope)
+        if inspect.isawaitable(result):
+            await result
 `
     );
 
     if (!domainMap.has(event.domain)) domainMap.set(event.domain, []);
-    domainMap.get(event.domain)!.push({ event, className, publisherClass, methodName, moduleName });
+    domainMap.get(event.domain)!.push({ event, className, publisherClass, consumerClass, handlerName, methodName, moduleName });
   }
 
   // Generate __init__.py with create_client factory
@@ -84,6 +112,8 @@ class ${publisherClass}:
   const allExports: string[] = [];
   const domainClasses: string[] = [];
   const domainProperties: string[] = [];
+  const consumerDomainArgs: string[] = [];
+  const consumerRouteLines: string[] = [];
 
   for (const [domain, entries] of domainMap) {
     const domainClass = `_${toPascalCase(domain)}Events`;
@@ -92,9 +122,10 @@ class ${publisherClass}:
       return `    @property\n    def ${methodName}(self) -> ${publisherClass}:\n        return ${publisherClass}(self._transport)`;
     }).join("\n\n");
 
-    for (const { className, moduleName } of entries) {
-      allImports.push(`from ${pkgName}.events.${moduleName} import ${className}`);
-      allExports.push(className);
+    for (const { className, consumerClass, handlerName, methodName, moduleName, event } of entries) {
+      allImports.push(`from ${pkgName}.events.${moduleName} import ${className}, ${consumerClass}, ${handlerName}`);
+      allExports.push(className, handlerName);
+      consumerRouteLines.push(`    if ${domain} and "${methodName}" in ${domain}:\n        routes["${event.id}@${event.version}"] = ${consumerClass}(${domain}["${methodName}"]).handle`);
     }
 
     domainClasses.push(
@@ -103,13 +134,15 @@ class ${publisherClass}:
     domainProperties.push(
       `    @property\n    def ${domain}(self) -> ${domainClass}:\n        return ${domainClass}(self._transport)`
     );
+    consumerDomainArgs.push(`${domain}: dict[str, object] | None = None`);
   }
 
   const initContent = `from __future__ import annotations
-from eventgen_runtime import TransportAdapter
+from collections.abc import Awaitable, Callable
+from eventgen_runtime import EventEnvelope, TransportAdapter
 ${[...new Set(allImports)].join("\n")}
 
-__all__ = ["create_client", ${allExports.map((e) => `"${e}"`).join(", ")}]
+__all__ = ["create_client", "create_consumer", ${allExports.map((e) => `"${e}"`).join(", ")}]
 
 
 ${domainClasses.join("\n\n")}
@@ -124,6 +157,24 @@ ${domainProperties.join("\n\n")}
 
 def create_client(transport: TransportAdapter) -> _EventClient:
     return _EventClient(transport)
+
+
+class _EventConsumer:
+    def __init__(self, routes: dict[str, Callable[[EventEnvelope], Awaitable[None]]]) -> None:
+        self._routes = routes
+
+    async def handle(self, envelope: EventEnvelope) -> bool:
+        route = self._routes.get(f"{envelope.event_id}@{envelope.version}")
+        if route is None:
+            return False
+        await route(envelope)
+        return True
+
+
+def create_consumer(*, ${consumerDomainArgs.join(", ")}) -> _EventConsumer:
+    routes: dict[str, Callable[[EventEnvelope], Awaitable[None]]] = {}
+${consumerRouteLines.join("\n")}
+    return _EventConsumer(routes)
 `;
 
   fs.writeFileSync(path.join(pkgDir, "__init__.py"), initContent);

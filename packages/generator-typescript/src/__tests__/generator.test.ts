@@ -11,6 +11,7 @@ const event: EventDefinition = {
   domain: "payments",
   name: "Payment Created",
   description: "Test event",
+  consumers: ["billing-service", "notification-service"],
   payloadSchema: {
     type: "object",
     properties: {
@@ -58,10 +59,26 @@ describe("TypeScript SDK generator", () => {
     expect(src).toContain("buildEnvelope");
   });
 
+  it("generates typed consumer handlers for the event", () => {
+    const src = fs.readFileSync(path.join(outDir, "src", "events", "payment-created.ts"), "utf8");
+    expect(src).toContain("PaymentsPaymentCreatedHandler");
+    expect(src).toContain('["billing-service","notification-service"] as const');
+    expect(src).toContain("createPaymentsPaymentCreatedConsumer");
+    expect(src).toContain("async handle(envelope: EventEnvelope)");
+  });
+
   it("generates index.ts with createClient factory", () => {
     const index = fs.readFileSync(path.join(outDir, "src", "index.ts"), "utf8");
     expect(index).toContain("createClient");
     expect(index).toContain("payments");
     expect(index).toContain("paymentCreated");
+  });
+
+  it("generates index.ts with createConsumer router", () => {
+    const index = fs.readFileSync(path.join(outDir, "src", "index.ts"), "utf8");
+    expect(index).toContain("createConsumer");
+    expect(index).toContain("EventConsumerHandlers");
+    expect(index).toContain('routes.set("payment.created@1.0.0"');
+    expect(index).toContain("Promise<boolean>");
   });
 });

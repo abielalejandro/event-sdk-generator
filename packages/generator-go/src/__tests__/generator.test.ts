@@ -11,6 +11,7 @@ const event: EventDefinition = {
   domain: "payments",
   name: "Payment Created",
   description: "Test event",
+  consumers: ["billing-service", "notification-service"],
   payloadSchema: {
     type: "object",
     properties: {
@@ -58,5 +59,23 @@ describe("Go SDK generator", () => {
   it("generates domain event method in client", () => {
     const src = fs.readFileSync(path.join(outDir, "client.go"), "utf8");
     expect(src).toContain("func (e *PaymentsEvents) PaymentCreated() *payments.PaymentCreatedPublisher");
+  });
+
+  it("generates typed consumer handler and consumer", () => {
+    const src = fs.readFileSync(path.join(outDir, "payments", "payment_created.go"), "utf8");
+    expect(src).toContain("type PaymentCreatedHandler func(ctx context.Context, payload PaymentCreatedPayload, envelope runtime.EventEnvelope) error");
+    expect(src).toContain('var PaymentCreatedConsumers = []string{"billing-service", "notification-service"}');
+    expect(src).toContain("type PaymentCreatedConsumer struct");
+    expect(src).toContain("func NewPaymentCreatedConsumer(handler PaymentCreatedHandler) *PaymentCreatedConsumer");
+    expect(src).toContain("func (c *PaymentCreatedConsumer) Handle(ctx context.Context, envelope runtime.EventEnvelope) error");
+  });
+
+  it("generates Consumer router in client.go", () => {
+    const src = fs.readFileSync(path.join(outDir, "client.go"), "utf8");
+    expect(src).toContain("type ConsumerHandlers struct");
+    expect(src).toContain("type PaymentsConsumerHandlers struct");
+    expect(src).toContain("func NewConsumer(handlers ConsumerHandlers) *Consumer");
+    expect(src).toContain('routes["payment.created@1.0.0"]');
+    expect(src).toContain("func (c *Consumer) Handle(ctx context.Context, envelope runtime.EventEnvelope) (bool, error)");
   });
 });

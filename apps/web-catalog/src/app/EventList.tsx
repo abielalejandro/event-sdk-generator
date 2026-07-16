@@ -7,11 +7,21 @@ type Event = {
   name?: string;
   domain: string;
   description: string;
+  producer?: string;
+  consumers?: string[];
   tags?: string[];
   destination?: { provider: string };
   usage?: { typescript: string; java: string; python: string; go: string };
+  consumerUsage?: { typescript: string; java: string; python: string; go: string };
   payloadSchema?: unknown;
 };
+
+const languageRows = [
+  ["TypeScript", "typescript"],
+  ["Java", "java"],
+  ["Python", "python"],
+  ["Go", "go"],
+] as const;
 
 export function EventList({ events }: { events: Event[] }) {
   const [query, setQuery] = useState("");
@@ -24,6 +34,8 @@ export function EventList({ events }: { events: Event[] }) {
           (e.name ?? "").toLowerCase().includes(q) ||
           e.domain.toLowerCase().includes(q) ||
           e.description.toLowerCase().includes(q) ||
+          (e.producer ?? "").toLowerCase().includes(q) ||
+          (e.consumers ?? []).some((consumer) => consumer.toLowerCase().includes(q)) ||
           (e.tags ?? []).some((t) => t.toLowerCase().includes(q))
       )
     : events;
@@ -48,18 +60,30 @@ export function EventList({ events }: { events: Event[] }) {
             <p>{event.description}</p>
             <p><b>Version:</b> {event.version}</p>
             <p><b>Domain:</b> {event.domain}</p>
+            <p><b>Producer:</b> {event.producer ?? "not-declared"}</p>
+            <div className="field-group">
+              <b>Consumers:</b>
+              {event.consumers && event.consumers.length > 0 ? (
+                <span className="tags inline-tags">
+                  {event.consumers.map((consumer) => <span key={consumer} className="tag consumer">{consumer}</span>)}
+                </span>
+              ) : (
+                <span className="muted"> not-declared</span>
+              )}
+            </div>
             {event.tags && event.tags.length > 0 && (
               <p className="tags">{event.tags.map((t) => <span key={t} className="tag">{t}</span>)}</p>
             )}
             <p><b>Destination:</b> {event.destination?.provider ?? "not-bound"}</p>
-            <h3>TypeScript</h3>
-            <pre>{event.usage?.typescript}</pre>
-            <h3>Java</h3>
-            <pre>{event.usage?.java}</pre>
-            <h3>Python</h3>
-            <pre>{event.usage?.python}</pre>
-            <h3>Go</h3>
-            <pre>{event.usage?.go}</pre>
+            {languageRows.map(([label, key]) => (
+              <section className="usage-section" key={key}>
+                <h3>{label}</h3>
+                <p className="usage-label">Publish</p>
+                <pre>{event.usage?.[key]}</pre>
+                <p className="usage-label">Consume</p>
+                <pre>{event.consumerUsage?.[key] ?? "not-generated"}</pre>
+              </section>
+            ))}
             <h3>Payload Schema</h3>
             <pre>{JSON.stringify(event.payloadSchema, null, 2)}</pre>
           </article>

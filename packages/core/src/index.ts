@@ -27,7 +27,11 @@ export type BindingFile = {
 export type Catalog = {
   generatedAt: string;
   environment: string;
-  events: Array<EventDefinition & { destination?: BindingFile["bindings"][number]["destination"]; usage: { typescript: string; java: string; python: string; go: string } }>;
+  events: Array<EventDefinition & {
+    destination?: BindingFile["bindings"][number]["destination"];
+    usage: { typescript: string; java: string; python: string; go: string };
+    consumerUsage: { typescript: string; java: string; python: string; go: string };
+  }>;
 };
 
 export function readJson<T>(filePath: string): T {
@@ -107,6 +111,12 @@ export function buildCatalog(events: EventDefinition[], bindings: BindingFile): 
           java: `client.${event.domain}().${toLowerCamelCase(event.name)}().publish(payload);`,
           python: `await client.${event.domain}.${toSnakeCase(event.name)}.publish(payload)`,
           go: `client.${toPascalCase(event.domain)}().${toPascalCase(event.name)}().Publish(ctx, payload)`
+        },
+        consumerUsage: {
+          typescript: `const consumer = createConsumer({ ${event.domain}: { ${toLowerCamelCase(event.name)}: async (payload, envelope) => { /* handle */ } } });\nawait consumer.handle(envelope);`,
+          java: `EventConsumer consumer = EventConsumer.builder()\n    .${event.domain}()\n    .${toLowerCamelCase(event.name)}((payload, envelope) -> { /* handle */ })\n    .build();\nconsumer.handle(envelope);`,
+          python: `consumer = create_consumer(${event.domain}={"${toSnakeCase(event.name)}": handle_${toSnakeCase(event.name)}})\nawait consumer.handle(envelope)`,
+          go: `consumer := events.NewConsumer(events.ConsumerHandlers{\n    ${toPascalCase(event.domain)}: &events.${toPascalCase(event.domain)}ConsumerHandlers{\n        ${toPascalCase(event.name)}: handle${toPascalCase(event.name)},\n    },\n})\nhandled, err := consumer.Handle(ctx, envelope)`
         }
       };
     })

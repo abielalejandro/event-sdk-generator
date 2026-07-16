@@ -42,6 +42,10 @@ pnpm generate:go
 
 # Generar todos los SDKs
 pnpm generate
+
+# Equivalente desde el CLI
+pnpm cli generate
+pnpm cli generate --target all
 ```
 
 Las salidas se crean en:
@@ -52,6 +56,12 @@ generated/java
 generated/python
 generated/go
 ```
+
+## Consumidores
+
+Los SDKs generados incluyen helpers para construir consumidores tipados por evento: handlers, metadata `consumers` y routers por `eventId@version`.
+
+Ver ejemplos por lenguaje en [`docs/consumers.md`](docs/consumers.md).
 
 ## Estructura
 

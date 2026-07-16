@@ -31,14 +31,17 @@ export function generateJavaSdk(input: { events: EventDefinition[]; bindings: Bi
   );
 
   // Group events by domain for the client factory
-  const domainMap = new Map<string, Array<{ event: EventDefinition; className: string; publisherName: string; methodName: string }>>();
+  const domainMap = new Map<string, Array<{ event: EventDefinition; className: string; publisherName: string; handlerName: string; consumerName: string; methodName: string }>>();
 
   for (const event of input.events) {
     const eventName = event.id.split(".").slice(1).join(".");
     const className = `${toPascalCase(event.domain)}${toPascalCase(eventName)}Payload`;
     const publisherName = `${toPascalCase(event.domain)}${toPascalCase(eventName)}Publisher`;
+    const handlerName = `${toPascalCase(event.domain)}${toPascalCase(eventName)}Handler`;
+    const consumerName = `${toPascalCase(event.domain)}${toPascalCase(eventName)}Consumer`;
     const methodName = toLowerCamelCase(event.name);
     const props = Object.entries((event.payloadSchema.properties ?? {}) as Record<string, { type?: string }>);
+    const consumers = (event.consumers ?? []).map((consumer) => `"${consumer}"`).join(", ");
 
     // Generate Payload class with builder
     const javaType = (t?: string) => mapJava(t);
@@ -98,8 +101,51 @@ public class ${publisherName} {
 `
     );
 
+    // Generate Handler interface
+    fs.writeFileSync(
+      path.join(base, `${handlerName}.java`),
+      `package ${input.javaPackage};
+
+import com.eventgen.runtime.EventEnvelope;
+
+@FunctionalInterface
+public interface ${handlerName} {
+    void handle(${className} payload, EventEnvelope envelope) throws Exception;
+}
+`
+    );
+
+    // Generate Consumer class
+    fs.writeFileSync(
+      path.join(base, `${consumerName}.java`),
+      `package ${input.javaPackage};
+
+import com.eventgen.runtime.EventEnvelope;
+import java.util.List;
+
+public class ${consumerName} {
+    private final ${handlerName} handler;
+
+    public ${consumerName}(${handlerName} handler) {
+        this.handler = handler;
+    }
+
+    public String eventId() { return "${event.id}"; }
+    public String version() { return "${event.version}"; }
+    public List<String> consumers() { return List.of(${consumers}); }
+
+    public void handle(EventEnvelope envelope) throws Exception {
+        if (!eventId().equals(envelope.eventId()) || !version().equals(envelope.version())) {
+            throw new IllegalArgumentException("Unexpected event envelope: " + envelope.eventId() + "@" + envelope.version());
+        }
+        handler.handle((${className}) envelope.payload(), envelope);
+    }
+}
+`
+    );
+
     if (!domainMap.has(event.domain)) domainMap.set(event.domain, []);
-    domainMap.get(event.domain)!.push({ event, className, publisherName, methodName });
+    domainMap.get(event.domain)!.push({ event, className, publisherName, handlerName, consumerName, methodName });
   }
 
   // Generate EventClient with nested domain accessors
@@ -127,6 +173,58 @@ public class EventClient {
     }
 
 ${domainMethods}
+}
+`
+  );
+
+  const consumerDomainBuilders = Array.from(domainMap.entries()).map(([domain, entries]) => {
+    const builderClass = `${toPascalCase(domain)}ConsumerBuilder`;
+    const handlerMethods = entries
+      .map(({ event, consumerName, handlerName, methodName }) =>
+        `        public ${builderClass} ${methodName}(${handlerName} handler) {\n            parent.routes.put("${event.id}@${event.version}", new ${consumerName}(handler)::handle);\n            return this;\n        }`
+      )
+      .join("\n\n");
+    return `    public ${builderClass} ${domain}() { return new ${builderClass}(this); }\n\n    public static class ${builderClass} {\n        private final Builder parent;\n\n        ${builderClass}(Builder parent) { this.parent = parent; }\n\n${handlerMethods}\n\n        public Builder done() { return parent; }\n        public EventConsumer build() { return parent.build(); }\n    }`;
+  }).join("\n\n");
+
+  fs.writeFileSync(
+    path.join(base, "EventConsumer.java"),
+    `package ${input.javaPackage};
+
+import com.eventgen.runtime.EventEnvelope;
+import java.util.HashMap;
+import java.util.Map;
+
+public class EventConsumer {
+    private final Map<String, EnvelopeHandler> routes;
+
+    private EventConsumer(Map<String, EnvelopeHandler> routes) {
+        this.routes = routes;
+    }
+
+    public boolean handle(EventEnvelope envelope) throws Exception {
+        EnvelopeHandler handler = routes.get(envelope.eventId() + "@" + envelope.version());
+        if (handler == null) return false;
+        handler.handle(envelope);
+        return true;
+    }
+
+    public static Builder builder() { return new Builder(); }
+
+    @FunctionalInterface
+    private interface EnvelopeHandler {
+        void handle(EventEnvelope envelope) throws Exception;
+    }
+
+    public static class Builder {
+        private final Map<String, EnvelopeHandler> routes = new HashMap<>();
+
+${consumerDomainBuilders}
+
+        public EventConsumer build() {
+            return new EventConsumer(new HashMap<>(routes));
+        }
+    }
 }
 `
   );

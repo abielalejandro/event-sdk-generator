@@ -52,4 +52,28 @@ describe("buildCatalog", () => {
     const catalog = buildCatalog([event], bindings);
     expect(catalog.events[0].usage.go).toBe("client.Payments().PaymentCreated().Publish(ctx, payload)");
   });
+
+  it("generates correct typescript consumer usage string", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].consumerUsage.typescript).toContain("createConsumer");
+    expect(catalog.events[0].consumerUsage.typescript).toContain("paymentCreated");
+    expect(catalog.events[0].consumerUsage.typescript).toContain("consumer.handle(envelope)");
+  });
+
+  it("generates correct java consumer usage string", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].consumerUsage.java).toContain("EventConsumer.builder()");
+    expect(catalog.events[0].consumerUsage.java).toContain(".paymentCreated");
+  });
+
+  it("generates correct python consumer usage string", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].consumerUsage.python).toBe('consumer = create_consumer(payments={"payment_created": handle_payment_created})\nawait consumer.handle(envelope)');
+  });
+
+  it("generates correct go consumer usage string", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].consumerUsage.go).toContain("events.NewConsumer");
+    expect(catalog.events[0].consumerUsage.go).toContain("PaymentCreated: handlePaymentCreated");
+  });
 });
