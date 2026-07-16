@@ -42,6 +42,10 @@ pnpm generate:go
 
 # Generar todos los SDKs
 pnpm generate
+
+# Equivalente desde el CLI
+pnpm cli generate
+pnpm cli generate --target all
 ```
 
 Las salidas se crean en:

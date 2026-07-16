@@ -12,7 +12,7 @@
     "generate:java": "pnpm build:cli && pnpm cli generate --target java",
     "generate:python": "pnpm build:cli && pnpm cli generate --target python",
     "generate:go": "pnpm build:cli && pnpm cli generate --target go",
-    "generate": "pnpm build:cli && pnpm cli generate --target typescript && pnpm cli generate --target java && pnpm cli generate --target python && pnpm cli generate --target go",
+    "generate": "pnpm build:cli && pnpm cli generate",
     "dev:web": "pnpm --filter @eventgen/web-catalog dev",
     "build:web": "pnpm build:catalog && pnpm --filter @eventgen/web-catalog build",
     "test": "pnpm -r --filter \"@eventgen/*\" test",

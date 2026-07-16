@@ -20,6 +20,10 @@ type Config = {
   };
 };
 
+type GenerateTarget = "typescript" | "java" | "python" | "go";
+
+const GENERATE_TARGETS: GenerateTarget[] = ["typescript", "java", "python", "go"];
+
 const DEFAULTS: Required<Omit<Config, "generate">> & { generate: Required<Config["generate"] & object> } = {
   events: "./events/definitions",
   bindings: "./events/bindings/dev.json",
@@ -42,6 +46,12 @@ function loadConfig(): Config {
 
 function resolve(flag: string | undefined, configValue: string | undefined, defaultValue: string): string {
   return flag ?? configValue ?? defaultValue;
+}
+
+function resolveGenerateTargets(target: string | undefined): GenerateTarget[] {
+  if (!target || target === "all") return GENERATE_TARGETS;
+  if (GENERATE_TARGETS.includes(target as GenerateTarget)) return [target as GenerateTarget];
+  throw new Error(`Unsupported target: ${target}`);
 }
 
 const program = new Command();
@@ -80,7 +90,7 @@ program.command("build-catalog")
   });
 
 program.command("generate")
-  .requiredOption("--target <target>", "typescript | java | python | go")
+  .option("--target <target>", "typescript | java | python | go | all", "all")
   .option("--events <dir>", "Directory with event definitions")
   .option("--bindings <file>", "Binding file path")
   .option("--out <dir>", "Output directory for generated SDK")
@@ -94,25 +104,27 @@ program.command("generate")
     const events = loadEventDefinitions(eventsDir);
     const bindings = readJson<BindingFile>(bindingsFile);
 
-    if (opts.target === "typescript") {
-      const outDir = resolve(opts.out, cfg.generate?.typescript?.out, DEFAULTS.generate.typescript.out!);
-      generateTypeScriptSdk({ events, bindings, outDir });
-    } else if (opts.target === "java") {
-      const outDir = resolve(opts.out, cfg.generate?.java?.out, DEFAULTS.generate.java.out!);
-      const javaPackage = resolve(opts.javaPackage, cfg.generate?.java?.package, DEFAULTS.generate.java.package!);
-      generateJavaSdk({ events, bindings, outDir, javaPackage });
-    } else if (opts.target === "python") {
-      const outDir = resolve(opts.out, cfg.generate?.python?.out, DEFAULTS.generate.python.out!);
-      const packageName = opts.pythonPackage ?? cfg.generate?.python?.packageName ?? DEFAULTS.generate.python.packageName;
-      generatePythonSdk({ events, bindings, outDir, packageName });
-    } else if (opts.target === "go") {
-      const outDir = resolve(opts.out, cfg.generate?.go?.out, DEFAULTS.generate.go.out!);
-      const modulePath = opts.goModule ?? cfg.generate?.go?.modulePath ?? DEFAULTS.generate.go.modulePath;
-      generateGoSdk({ events, bindings, outDir, modulePath });
-    } else {
-      throw new Error(`Unsupported target: ${opts.target}`);
+    const targets = resolveGenerateTargets(opts.target);
+
+    for (const target of targets) {
+      if (target === "typescript") {
+        const outDir = resolve(opts.out, cfg.generate?.typescript?.out, DEFAULTS.generate.typescript.out!);
+        generateTypeScriptSdk({ events, bindings, outDir });
+      } else if (target === "java") {
+        const outDir = resolve(opts.out, cfg.generate?.java?.out, DEFAULTS.generate.java.out!);
+        const javaPackage = resolve(opts.javaPackage, cfg.generate?.java?.package, DEFAULTS.generate.java.package!);
+        generateJavaSdk({ events, bindings, outDir, javaPackage });
+      } else if (target === "python") {
+        const outDir = resolve(opts.out, cfg.generate?.python?.out, DEFAULTS.generate.python.out!);
+        const packageName = opts.pythonPackage ?? cfg.generate?.python?.packageName ?? DEFAULTS.generate.python.packageName;
+        generatePythonSdk({ events, bindings, outDir, packageName });
+      } else if (target === "go") {
+        const outDir = resolve(opts.out, cfg.generate?.go?.out, DEFAULTS.generate.go.out!);
+        const modulePath = opts.goModule ?? cfg.generate?.go?.modulePath ?? DEFAULTS.generate.go.modulePath;
+        generateGoSdk({ events, bindings, outDir, modulePath });
+      }
     }
-    console.log(`${opts.target} SDK generated.`);
+    console.log(`${targets.join(", ")} SDK${targets.length === 1 ? "" : "s"} generated.`);
   });
 
 program.parse();
