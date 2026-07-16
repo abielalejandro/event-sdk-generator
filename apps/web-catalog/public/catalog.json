@@ -64,6 +64,12 @@
         "java": "client.payments().paymentCreated().publish(payload);",
         "python": "await client.payments.payment_created.publish(payload)",
         "go": "client.Payments().PaymentCreated().Publish(ctx, payload)"
+      },
+      "consumerUsage": {
+        "typescript": "const consumer = createConsumer({ payments: { paymentCreated: async (payload, envelope) => { /* handle */ } } });\nawait consumer.handle(envelope);",
+        "java": "EventConsumer consumer = EventConsumer.builder()\n    .payments()\n    .paymentCreated((payload, envelope) -> { /* handle */ })\n    .build();\nconsumer.handle(envelope);",
+        "python": "consumer = create_consumer(payments={\"payment_created\": handle_payment_created})\nawait consumer.handle(envelope)",
+        "go": "consumer := events.NewConsumer(events.ConsumerHandlers{\n    Payments: &events.PaymentsConsumerHandlers{\n        PaymentCreated: handlePaymentCreated,\n    },\n})\nhandled, err := consumer.Handle(ctx, envelope)"
       }
     }
   ]
