@@ -7,6 +7,8 @@ type Event = {
   name?: string;
   domain: string;
   description: string;
+  producer?: string;
+  consumers?: string[];
   tags?: string[];
   destination?: { provider: string };
   usage?: { typescript: string; java: string; python: string; go: string };
@@ -24,6 +26,8 @@ export function EventList({ events }: { events: Event[] }) {
           (e.name ?? "").toLowerCase().includes(q) ||
           e.domain.toLowerCase().includes(q) ||
           e.description.toLowerCase().includes(q) ||
+          (e.producer ?? "").toLowerCase().includes(q) ||
+          (e.consumers ?? []).some((consumer) => consumer.toLowerCase().includes(q)) ||
           (e.tags ?? []).some((t) => t.toLowerCase().includes(q))
       )
     : events;
@@ -48,6 +52,17 @@ export function EventList({ events }: { events: Event[] }) {
             <p>{event.description}</p>
             <p><b>Version:</b> {event.version}</p>
             <p><b>Domain:</b> {event.domain}</p>
+            <p><b>Producer:</b> {event.producer ?? "not-declared"}</p>
+            <div className="field-group">
+              <b>Consumers:</b>
+              {event.consumers && event.consumers.length > 0 ? (
+                <span className="tags inline-tags">
+                  {event.consumers.map((consumer) => <span key={consumer} className="tag consumer">{consumer}</span>)}
+                </span>
+              ) : (
+                <span className="muted"> not-declared</span>
+              )}
+            </div>
             {event.tags && event.tags.length > 0 && (
               <p className="tags">{event.tags.map((t) => <span key={t} className="tag">{t}</span>)}</p>
             )}
