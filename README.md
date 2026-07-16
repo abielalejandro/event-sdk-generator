@@ -63,6 +63,14 @@ Los SDKs generados incluyen helpers para construir consumidores tipados por even
 
 Ver ejemplos por lenguaje en [`docs/consumers.md`](docs/consumers.md).
 
+## Contribuir
+
+El flujo obligatorio de trabajo del proyecto está definido en [`specs/011-contribution-workflow.md`](specs/011-contribution-workflow.md).
+
+Antes de agregar specs, features, fixes o tareas de mantenimiento, seguir esas reglas: partir desde `main`, crear una rama dedicada, mantener un cambio lógico por rama y abrir PR hacia `main`.
+
+Ver el resumen operativo en [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Estructura
 
 ```txt
