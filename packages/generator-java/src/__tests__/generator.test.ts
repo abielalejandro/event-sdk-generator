@@ -11,6 +11,7 @@ const event: EventDefinition = {
   domain: "payments",
   name: "Payment Created",
   description: "Test event",
+  consumers: ["billing-service", "notification-service"],
   payloadSchema: {
     type: "object",
     properties: {
@@ -61,5 +62,28 @@ describe("Java SDK generator", () => {
     expect(src).toContain("import com.eventgen.runtime.TransportAdapter");
     expect(src).toContain("public PaymentsEvents payments()");
     expect(src).toContain("paymentCreated()");
+  });
+
+  it("generates Handler interface for consumers", () => {
+    const src = fs.readFileSync(path.join(base, "PaymentsCreatedHandler.java"), "utf8");
+    expect(src).toContain("@FunctionalInterface");
+    expect(src).toContain("void handle(PaymentsCreatedPayload payload, EventEnvelope envelope) throws Exception");
+  });
+
+  it("generates Consumer class with metadata and envelope validation", () => {
+    const src = fs.readFileSync(path.join(base, "PaymentsCreatedConsumer.java"), "utf8");
+    expect(src).toContain("class PaymentsCreatedConsumer");
+    expect(src).toContain('public String eventId() { return "payment.created"; }');
+    expect(src).toContain('public String version() { return "1.0.0"; }');
+    expect(src).toContain('List.of("billing-service", "notification-service")');
+    expect(src).toContain("handler.handle((PaymentsCreatedPayload) envelope.payload(), envelope)");
+  });
+
+  it("generates EventConsumer router", () => {
+    const src = fs.readFileSync(path.join(base, "EventConsumer.java"), "utf8");
+    expect(src).toContain("public boolean handle(EventEnvelope envelope) throws Exception");
+    expect(src).toContain('routes.get(envelope.eventId() + "@" + envelope.version())');
+    expect(src).toContain('parent.routes.put("payment.created@1.0.0"');
+    expect(src).toContain("public PaymentsConsumerBuilder paymentCreated(PaymentsCreatedHandler handler)");
   });
 });

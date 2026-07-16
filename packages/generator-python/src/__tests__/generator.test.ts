@@ -11,6 +11,7 @@ const event: EventDefinition = {
   domain: "payments",
   name: "Payment Created",
   description: "Test event",
+  consumers: ["billing-service", "notification-service"],
   payloadSchema: {
     type: "object",
     properties: {
@@ -56,6 +57,23 @@ describe("Python SDK generator", () => {
     expect(init).toContain("def create_client");
     expect(init).toContain("payments");
     expect(init).toContain("payment_created");
+  });
+
+  it("generates typed consumer handler and consumer class", () => {
+    const src = fs.readFileSync(path.join(pkgDir, "events", "payment_created.py"), "utf8");
+    expect(src).toContain("PaymentsPaymentCreatedHandler = Callable");
+    expect(src).toContain("class _PaymentsPaymentCreatedConsumer");
+    expect(src).toContain('event_id = "payment.created"');
+    expect(src).toContain('consumers = tuple(["billing-service","notification-service"])');
+    expect(src).toContain("async def handle(self, envelope: EventEnvelope) -> None");
+  });
+
+  it("generates __init__.py with create_consumer router", () => {
+    const init = fs.readFileSync(path.join(pkgDir, "__init__.py"), "utf8");
+    expect(init).toContain("def create_consumer");
+    expect(init).toContain("class _EventConsumer");
+    expect(init).toContain('routes["payment.created@1.0.0"]');
+    expect(init).toContain('if payments and "payment_created" in payments');
   });
 
   it("creates __init__.py in events subpackage", () => {
