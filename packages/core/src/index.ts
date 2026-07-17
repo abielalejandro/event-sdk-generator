@@ -31,6 +31,7 @@ export type Catalog = {
     destination?: BindingFile["bindings"][number]["destination"];
     usage: { typescript: string; java: string; python: string; go: string };
     consumerUsage: { typescript: string; java: string; python: string; go: string };
+    backgroundConsumerUsage: { typescript: string; java: string; python: string; go: string };
   }>;
 };
 
@@ -117,6 +118,12 @@ export function buildCatalog(events: EventDefinition[], bindings: BindingFile): 
           java: `EventConsumer consumer = EventConsumer.builder()\n    .${event.domain}()\n    .${toLowerCamelCase(event.name)}((payload, envelope) -> { /* handle */ })\n    .build();\nconsumer.handle(envelope);`,
           python: `consumer = create_consumer(${event.domain}={"${toSnakeCase(event.name)}": handle_${toSnakeCase(event.name)}})\nawait consumer.handle(envelope)`,
           go: `consumer := events.NewConsumer(events.ConsumerHandlers{\n    ${toPascalCase(event.domain)}: &events.${toPascalCase(event.domain)}ConsumerHandlers{\n        ${toPascalCase(event.name)}: handle${toPascalCase(event.name)},\n    },\n})\nhandled, err := consumer.Handle(ctx, envelope)`
+        },
+        backgroundConsumerUsage: {
+          typescript: `const runner = runConsumer({\n  source: new SqsMessageSource({ queueUrl }),\n  consumer,\n  concurrency: 5,\n});\nawait runner.start();`,
+          java: `ConsumerRunner runner = ConsumerRunner.builder()\n    .source(new SqsMessageSource(queueUrl))\n    .consumer(consumer)\n    .concurrency(5)\n    .build();\nrunner.start();`,
+          python: `runner = run_consumer(\n    source=SqsMessageSource(queue_url),\n    consumer=consumer,\n    concurrency=5,\n)\nawait runner.start()`,
+          go: `source, err := adapters.NewSqsMessageSource(ctx, queueURL)\nrunner := runtime.NewConsumerRunner(source, consumer, runtime.ConsumerRunnerOptions{\n    Concurrency: 5,\n})\nerr = runner.Start(ctx)`
         }
       };
     })

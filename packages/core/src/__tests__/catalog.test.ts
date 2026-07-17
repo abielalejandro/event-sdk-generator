@@ -76,4 +76,13 @@ describe("buildCatalog", () => {
     expect(catalog.events[0].consumerUsage.go).toContain("events.NewConsumer");
     expect(catalog.events[0].consumerUsage.go).toContain("PaymentCreated: handlePaymentCreated");
   });
+
+  it("generates background consumer usage strings", () => {
+    const catalog = buildCatalog([event], bindings);
+    expect(catalog.events[0].backgroundConsumerUsage.typescript).toContain("runConsumer");
+    expect(catalog.events[0].backgroundConsumerUsage.typescript).toContain("SqsMessageSource");
+    expect(catalog.events[0].backgroundConsumerUsage.java).toContain("ConsumerRunner.builder()");
+    expect(catalog.events[0].backgroundConsumerUsage.python).toContain("run_consumer");
+    expect(catalog.events[0].backgroundConsumerUsage.go).toContain("runtime.NewConsumerRunner");
+  });
 });

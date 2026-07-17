@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:ci": "vitest run --reporter=verbose --reporter=junit --outputFile=test-results/junit.xml"
   },
   "dependencies": {
     "next": "^14.2.15",
@@ -16,6 +18,8 @@
   "devDependencies": {
     "@types/node": "^20.16.11",
     "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.1"
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }

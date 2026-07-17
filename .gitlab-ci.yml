@@ -47,9 +47,11 @@ build:typescript:
     - pnpm --filter @eventgen/generator-typescript build
     - pnpm --filter @eventgen/generator-java build
     - pnpm --filter @eventgen/generator-python build
+    - pnpm --filter @eventgen/generator-go build
     - pnpm generate:ts
     - pnpm generate:java
     - pnpm generate:python
+    - pnpm generate:go
   artifacts:
     paths:
       - packages/*/dist/
@@ -70,8 +72,8 @@ build:java:
   stage: build
   image: maven:3.9-eclipse-temurin-${JAVA_VERSION}
   script:
+    - cd packages/runtime-java
     - mvn --no-transfer-progress clean package -DskipTests
-  working_directory: packages/runtime-java
   artifacts:
     paths:
       - packages/runtime-java/target/*.jar
@@ -82,13 +84,21 @@ build:python:
   stage: build
   image: python:${PYTHON_VERSION}
   script:
+    - cd packages/runtime-python
     - pip install --quiet hatchling build
     - python -m build
-  working_directory: packages/runtime-python
   artifacts:
     paths:
       - packages/runtime-python/dist/
     expire_in: 1 hour
+
+build:go:
+  <<: *only-mr-and-master
+  stage: build
+  image: golang:1.21
+  script:
+    - cd packages/runtime-go
+    - go test ./...
 
 # ─── TEST ────────────────────────────────────────────────────────────────────
 
@@ -102,12 +112,41 @@ test:typescript:
     - pnpm --filter @eventgen/generator-typescript build
     - pnpm --filter @eventgen/generator-java build
     - pnpm --filter @eventgen/generator-python build
-    - pnpm test:ci
+    - pnpm --filter @eventgen/generator-go build
+    - pnpm test:ci:packages
   artifacts:
     when: always
     reports:
       junit: packages/*/test-results/*.xml
     expire_in: 1 week
+
+test:java:
+  <<: *only-mr-and-master
+  stage: test
+  image: maven:3.9-eclipse-temurin-${JAVA_VERSION}
+  needs: [build:java]
+  script:
+    - cd packages/runtime-java
+    - mvn --no-transfer-progress test
+
+test:python:
+  <<: *only-mr-and-master
+  stage: test
+  image: python:${PYTHON_VERSION}
+  needs: [build:python]
+  script:
+    - cd packages/runtime-python
+    - python -m compileall src
+    - PYTHONPATH=src python -m unittest discover -s tests
+
+test:go:
+  <<: *only-mr-and-master
+  stage: test
+  image: golang:1.21
+  needs: [build:go]
+  script:
+    - cd packages/runtime-go
+    - go test ./...
 
 # ─── PUBLISH ─────────────────────────────────────────────────────────────────
 
@@ -121,7 +160,7 @@ publish:npm:
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
   script:
     - |
-      for pkg in core runtime-typescript generator-typescript generator-java generator-python cli; do
+      for pkg in core runtime-typescript generator-typescript generator-java generator-python generator-go cli; do
         echo "▶ Building @eventgen/$pkg"
         pnpm --filter @eventgen/$pkg build
         echo "▶ Publishing @eventgen/$pkg"
@@ -217,7 +256,7 @@ bump-version:
     - npm install -g pnpm@${PNPM_VERSION}
     - pnpm install --frozen-lockfile
     - |
-      for pkg in core runtime-typescript generator-typescript generator-java generator-python cli; do
+      for pkg in core runtime-typescript generator-typescript generator-java generator-python generator-go cli; do
         node -e "
           const f = 'packages/$pkg/package.json';
           const p = JSON.parse(require('fs').readFileSync(f));

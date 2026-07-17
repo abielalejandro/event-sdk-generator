@@ -41,6 +41,42 @@ type TransportAdapter interface {
 	Publish(ctx context.Context, envelope EventEnvelope) (*PublishResult, error)
 }
 
+// ReceivedMessage wraps an inbound event and transport-specific acknowledgement controls.
+type ReceivedMessage interface {
+	Envelope() EventEnvelope
+	Raw() any
+	Attributes() map[string]any
+	Ack(ctx context.Context) error
+	Retry(ctx context.Context, err error) error
+	DeadLetter(ctx context.Context, err error) error
+}
+
+// ReceiveOptions configures a single receive call.
+type ReceiveOptions struct {
+	MaxMessages int
+}
+
+// MessageSource receives event envelopes from an inbound transport.
+type MessageSource interface {
+	Receive(ctx context.Context, opts ReceiveOptions) ([]ReceivedMessage, error)
+	Close(ctx context.Context) error
+}
+
+// EventConsumer is implemented by generated consumer routers.
+type EventConsumer interface {
+	Handle(ctx context.Context, envelope EventEnvelope) (bool, error)
+}
+
+// MessageAction controls what the runner does after unhandled events or failures.
+type MessageAction string
+
+const (
+	MessageActionAck        MessageAction = "ack"
+	MessageActionRetry      MessageAction = "retry"
+	MessageActionDeadLetter MessageAction = "deadLetter"
+	MessageActionIgnore     MessageAction = "ignore"
+)
+
 // PublishOptions holds optional publish-time parameters.
 type PublishOptions struct {
 	TraceID string

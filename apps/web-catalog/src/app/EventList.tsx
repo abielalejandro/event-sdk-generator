@@ -13,6 +13,7 @@ type Event = {
   destination?: { provider: string };
   usage?: { typescript: string; java: string; python: string; go: string };
   consumerUsage?: { typescript: string; java: string; python: string; go: string };
+  backgroundConsumerUsage?: { typescript: string; java: string; python: string; go: string };
   payloadSchema?: unknown;
 };
 
@@ -21,6 +22,12 @@ const languageRows = [
   ["Java", "java"],
   ["Python", "python"],
   ["Go", "go"],
+] as const;
+
+const usageGroups = [
+  ["Publisher", (event: Event) => event.usage],
+  ["Consumer", (event: Event) => event.consumerUsage],
+  ["Background job", (event: Event) => event.backgroundConsumerUsage],
 ] as const;
 
 export function EventList({ events }: { events: Event[] }) {
@@ -75,13 +82,17 @@ export function EventList({ events }: { events: Event[] }) {
               <p className="tags">{event.tags.map((t) => <span key={t} className="tag">{t}</span>)}</p>
             )}
             <p><b>Destination:</b> {event.destination?.provider ?? "not-bound"}</p>
-            {languageRows.map(([label, key]) => (
-              <section className="usage-section" key={key}>
-                <h3>{label}</h3>
-                <p className="usage-label">Publish</p>
-                <pre>{event.usage?.[key]}</pre>
-                <p className="usage-label">Consume</p>
-                <pre>{event.consumerUsage?.[key] ?? "not-generated"}</pre>
+            {usageGroups.map(([usageLabel, getUsage]) => (
+              <section className="usage-section" key={usageLabel}>
+                <h3>{usageLabel}</h3>
+                <div className="usage-grid">
+                  {languageRows.map(([languageLabel, key]) => (
+                    <div className="usage-example" key={key}>
+                      <p className="usage-label">{languageLabel}</p>
+                      <pre>{getUsage(event)?.[key] ?? "not-generated"}</pre>
+                    </div>
+                  ))}
+                </div>
               </section>
             ))}
             <h3>Payload Schema</h3>

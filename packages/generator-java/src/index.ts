@@ -195,7 +195,7 @@ import com.eventgen.runtime.EventEnvelope;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EventConsumer {
+public class EventConsumer implements com.eventgen.runtime.EventConsumer {
     private final Map<String, EnvelopeHandler> routes;
 
     private EventConsumer(Map<String, EnvelopeHandler> routes) {
