@@ -67,6 +67,68 @@ describe("ConsumerRunner", () => {
     expect(attempts).toBeGreaterThanOrEqual(2);
     expect(onError).toHaveBeenCalledOnce();
   });
+
+  it("dead letters handler failures when configured", async () => {
+    const envelope = buildEnvelope("payment.created", "1.0.0", {});
+    const source = new InMemoryMessageSource([envelope]);
+
+    const runner = runConsumer({
+      source,
+      consumer: {
+        handle: async () => {
+          throw new Error("boom");
+        },
+      },
+      handlerError: "deadLetter",
+      idleDelayMs: 0,
+    });
+
+    await runner.start();
+    await waitFor(() => source.deadLetters.length === 1);
+    await runner.stop();
+
+    expect(source.messages[0].deadLettered).toBe(true);
+  });
+
+  it("processes messages up to the configured concurrency", async () => {
+    const envelopes = [
+      buildEnvelope("payment.created", "1.0.0", { paymentId: "pay_1" }),
+      buildEnvelope("payment.created", "1.0.0", { paymentId: "pay_2" }),
+    ];
+    const source = new InMemoryMessageSource(envelopes);
+    const handle = vi.fn().mockResolvedValue(true);
+
+    const runner = runConsumer({
+      source,
+      consumer: { handle },
+      concurrency: 2,
+      idleDelayMs: 0,
+    });
+
+    await runner.start();
+    await waitFor(() => source.messages.every((message) => message.acked));
+    await runner.stop();
+
+    expect(handle).toHaveBeenCalledTimes(2);
+    expect(source.messages.map((message) => message.attempts)).toEqual([1, 1]);
+  });
+
+  it("closes the source on stop", async () => {
+    const close = vi.fn().mockResolvedValue(undefined);
+    const runner = runConsumer({
+      source: {
+        receive: async () => [],
+        close,
+      },
+      consumer: { handle: vi.fn() },
+      idleDelayMs: 0,
+    });
+
+    await runner.start();
+    await runner.stop();
+
+    expect(close).toHaveBeenCalledOnce();
+  });
 });
 
 async function waitFor(predicate: () => boolean): Promise<void> {

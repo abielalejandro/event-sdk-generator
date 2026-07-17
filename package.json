@@ -16,7 +16,11 @@
     "dev:web": "pnpm --filter @eventgen/web-catalog dev",
     "build:web": "pnpm build:catalog && pnpm --filter @eventgen/web-catalog build",
     "test": "pnpm -r --filter \"@eventgen/*\" test",
-    "test:ci": "pnpm -r --filter \"@eventgen/*\" test:ci"
+    "test:ci:packages": "pnpm -r --filter \"@eventgen/*\" test:ci",
+    "test:ci:java": "mvn --no-transfer-progress test -f packages/runtime-java/pom.xml",
+    "test:ci:python": "python3 -m compileall packages/runtime-python/src && PYTHONPATH=packages/runtime-python/src python3 -m unittest discover -s packages/runtime-python/tests",
+    "test:ci:go": "cd packages/runtime-go && go test ./...",
+    "test:ci": "pnpm test:ci:packages && pnpm test:ci:java && pnpm test:ci:python && pnpm test:ci:go"
   },
   "devDependencies": {
     "typescript": "^5.5.4"

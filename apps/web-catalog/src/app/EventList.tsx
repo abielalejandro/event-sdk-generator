@@ -24,6 +24,12 @@ const languageRows = [
   ["Go", "go"],
 ] as const;
 
+const usageGroups = [
+  ["Publisher", (event: Event) => event.usage],
+  ["Consumer", (event: Event) => event.consumerUsage],
+  ["Background job", (event: Event) => event.backgroundConsumerUsage],
+] as const;
+
 export function EventList({ events }: { events: Event[] }) {
   const [query, setQuery] = useState("");
 
@@ -76,15 +82,17 @@ export function EventList({ events }: { events: Event[] }) {
               <p className="tags">{event.tags.map((t) => <span key={t} className="tag">{t}</span>)}</p>
             )}
             <p><b>Destination:</b> {event.destination?.provider ?? "not-bound"}</p>
-            {languageRows.map(([label, key]) => (
-              <section className="usage-section" key={key}>
-                <h3>{label}</h3>
-                <p className="usage-label">Publish</p>
-                <pre>{event.usage?.[key]}</pre>
-                <p className="usage-label">Consume</p>
-                <pre>{event.consumerUsage?.[key] ?? "not-generated"}</pre>
-                <p className="usage-label">Run in background</p>
-                <pre>{event.backgroundConsumerUsage?.[key] ?? "not-generated"}</pre>
+            {usageGroups.map(([usageLabel, getUsage]) => (
+              <section className="usage-section" key={usageLabel}>
+                <h3>{usageLabel}</h3>
+                <div className="usage-grid">
+                  {languageRows.map(([languageLabel, key]) => (
+                    <div className="usage-example" key={key}>
+                      <p className="usage-label">{languageLabel}</p>
+                      <pre>{getUsage(event)?.[key] ?? "not-generated"}</pre>
+                    </div>
+                  ))}
+                </div>
               </section>
             ))}
             <h3>Payload Schema</h3>

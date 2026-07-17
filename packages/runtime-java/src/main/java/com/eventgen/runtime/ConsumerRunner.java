@@ -1,8 +1,10 @@
 package com.eventgen.runtime;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
 public class ConsumerRunner implements AutoCloseable {
@@ -51,8 +53,19 @@ public class ConsumerRunner implements AutoCloseable {
                     sleep();
                     continue;
                 }
+                List<Future<?>> futures = new ArrayList<>();
                 for (ReceivedMessage message : messages) {
-                    executor.submit(() -> process(message));
+                    futures.add(executor.submit(() -> process(message)));
+                }
+                for (Future<?> future : futures) {
+                    try {
+                        future.get();
+                    } catch (InterruptedException error) {
+                        Thread.currentThread().interrupt();
+                        running = false;
+                    } catch (Exception error) {
+                        report(error, null);
+                    }
                 }
             } catch (Exception error) {
                 report(error, null);

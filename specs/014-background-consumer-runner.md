@@ -1,5 +1,8 @@
 # Background Consumer Runner Spec
 
+**Estado:** Finalizada  
+**Finalizada el:** 2026-07-17
+
 Define el soporte para ejecutar consumers en background sobre fuentes de mensajes como SQS, Kafka, RabbitMQ, Pub/Sub y Service Bus.
 
 ## Contexto
